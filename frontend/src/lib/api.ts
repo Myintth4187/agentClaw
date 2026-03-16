@@ -312,8 +312,11 @@ export async function setAgentFile(
 // Session functions
 // ---------------------------------------------------------------------------
 
-export async function listSessions(): Promise<Session[]> {
-  return fetchJSON<Session[]>('/api/openclaw/sessions')
+export async function listSessions(agentId?: string): Promise<Session[]> {
+  const url = agentId
+    ? `/api/openclaw/sessions?agentId=${encodeURIComponent(agentId)}`
+    : '/api/openclaw/sessions'
+  return fetchJSON<Session[]>(url)
 }
 
 export async function getSession(key: string): Promise<SessionDetail> {

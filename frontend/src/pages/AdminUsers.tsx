@@ -5,9 +5,8 @@ import {
   Trash2,
   User,
   Loader2,
-  BarChart3,
   RefreshCw,
-  Pause,
+  TrendingUp,
 } from 'lucide-react'
 
 interface UserSummary {
@@ -24,13 +23,20 @@ interface UserSummary {
   tokens_used_today: number
 }
 
+// Quota limits based on tier
+const QUOTA_LIMITS: Record<string, number> = {
+  free: 10000,
+  basic: 50000,
+  pro: 200000,
+}
+
 interface UsageSummary {
   total_tokens_today: number
   total_users: number
   active_containers: number
 }
 
-export default function Admin() {
+export default function AdminUsers() {
   const [users, setUsers] = useState<UserSummary[]>([])
   const [usage, setUsage] = useState<UsageSummary | null>(null)
   const [loading, setLoading] = useState(true)
@@ -59,9 +65,6 @@ export default function Admin() {
 
   useEffect(() => {
     fetchData()
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchData, 30000)
-    return () => clearInterval(interval)
   }, [])
 
   const updateRole = async (userId: string, role: string) => {
@@ -82,16 +85,6 @@ export default function Admin() {
     const token = localStorage.getItem('openclaw_access_token')
     await fetch(`/api/admin/users/${userId}/container`, {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    fetchData()
-  }
-
-  const pauseContainer = async (userId: string) => {
-    if (!confirm('确定要暂停该用户的容器吗？')) return
-    const token = localStorage.getItem('openclaw_access_token')
-    await fetch(`/api/admin/users/${userId}/container/pause`, {
-      method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     })
     fetchData()
@@ -160,10 +153,10 @@ export default function Admin() {
         <div className="rounded-xl border border-dark-border bg-dark-card p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-purple">
-              <BarChart3 size={20} className="text-white" />
+              <TrendingUp size={20} className="text-white" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-dark-text">{((usage?.total_tokens_today ?? 0) / 1000).toFixed(1)}K</div>
+              <div className="text-2xl font-bold text-dark-text">{(((usage?.total_tokens_today ?? 0)) / 1000).toFixed(1)}K</div>
               <div className="text-sm text-dark-text-secondary">今日 Token 消耗</div>
             </div>
           </div>
@@ -186,11 +179,10 @@ export default function Admin() {
               <tr className="text-left text-xs text-dark-text-secondary border-b border-dark-border">
                 <th className="px-6 py-3 font-medium">用户</th>
                 <th className="px-4 py-3 font-medium">角色</th>
-                <th className="px-4 py-3 font-medium">配额</th>
                 <th className="px-4 py-3 font-medium">容器状态</th>
                 <th className="px-4 py-3 font-medium">CPU</th>
                 <th className="px-4 py-3 font-medium">内存</th>
-                <th className="px-4 py-3 font-medium">今日用量</th>
+                <th className="px-4 py-3 font-medium">用量/配额</th>
                 <th className="px-4 py-3 font-medium">操作</th>
               </tr>
             </thead>
@@ -219,15 +211,6 @@ export default function Admin() {
                     </select>
                   </td>
                   <td className="px-4 py-4">
-                    <span className={`rounded-full px-2 py-0.5 text-xs ${
-                      user.quota_tier === 'pro' ? 'bg-accent-purple/20 text-accent-purple' :
-                      user.quota_tier === 'basic' ? 'bg-accent-blue/20 text-accent-blue' :
-                      'bg-dark-text-secondary/20 text-dark-text-secondary'
-                    }`}>
-                      {user.quota_tier}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4">
                     <span className={`flex items-center gap-1.5 text-xs ${
                       user.container_status === 'running' ? 'text-accent-green' :
                       user.container_status === 'paused' ? 'text-accent-yellow' :
@@ -242,29 +225,24 @@ export default function Admin() {
                     </span>
                   </td>
                   <td className="px-4 py-4 text-sm text-dark-text-secondary">
-                    {user.container_cpu !== null ? `${user.container_cpu.toFixed(1)}%` : '-'}
+                    {user.container_cpu != null ? `${user.container_cpu.toFixed(1)}%` : '-'}
                   </td>
                   <td className="px-4 py-4 text-sm text-dark-text-secondary">
-                    {user.container_memory !== null ? (
-                      <span title={`内存使用率: ${user.container_memory_percent?.toFixed(1)}%`}>
+                    {user.container_memory != null ? (
+                      <span title={`内存使用率: ${user.container_memory_percent?.toFixed(1) ?? '-'}%`}>
                         {user.container_memory}
                       </span>
                     ) : '-'}
                   </td>
                   <td className="px-4 py-4 text-sm text-dark-text-secondary">
-                    {user.tokens_used_today.toLocaleString()}
+                    {(() => {
+                      const used = user.tokens_used_today ?? 0
+                      const limit = QUOTA_LIMITS[user.quota_tier] ?? QUOTA_LIMITS.free
+                      return `${Math.round(used)}/${Math.round(limit)}`
+                    })()}
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center justify-end gap-2">
-                      {user.container_status === 'running' && (
-                        <button
-                          onClick={() => pauseContainer(user.id)}
-                          className="rounded p-1.5 text-dark-text-secondary hover:bg-dark-card hover:text-accent-yellow"
-                          title="暂停容器"
-                        >
-                          <Pause size={16} />
-                        </button>
-                      )}
                       {user.container_status && (
                         <button
                           onClick={() => deleteContainer(user.id)}

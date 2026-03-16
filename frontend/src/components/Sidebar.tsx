@@ -12,11 +12,10 @@ import {
   BookOpen,
   MessageSquare,
   Clock,
-  Monitor,
   Code2,
   Settings,
   User,
-  Shield,
+  Users,
 } from 'lucide-react'
 
 
@@ -33,6 +32,11 @@ export default function Sidebar() {
   const isAdmin = user?.role === 'admin'
 
   const navSections = [
+    // Admin-only: 仪表盘放最上面
+    ...(isAdmin ? [{
+      label: '概览',
+      items: [{ to: '/dashboard', icon: LayoutDashboard, label: '仪表盘' }],
+    }] : []),
     // Regular user visible sections
     {
       label: '技能',
@@ -42,17 +46,7 @@ export default function Sidebar() {
         { to: '/files', icon: FolderOpen, label: '文件管理' },
       ],
     },
-    {
-      label: '账户',
-      items: [
-        { to: '/profile', icon: User, label: '个人信息' },
-      ],
-    },
     // Admin-only sections
-    ...(isAdmin ? [{
-      label: '概览',
-      items: [{ to: '/dashboard', icon: LayoutDashboard, label: '仪表盘' }],
-    }] : []),
     ...(isAdmin ? [{
       label: 'Agents',
       items: [{ to: '/agents', icon: Bot, label: 'Agents', badgeKey: 'agents' }],
@@ -62,7 +56,6 @@ export default function Sidebar() {
       items: [
         { to: '/channels', icon: Radio, label: '渠道管理' },
         { to: '/models', icon: Brain, label: 'AI 模型' },
-        { to: '/nodes', icon: Monitor, label: 'Node 管理' },
         { to: '/knowledge', icon: BookOpen, label: '知识库' },
         { to: '/cron', icon: Clock, label: '定时任务' },
         { to: '/api', icon: Code2, label: 'API设定' },
@@ -71,8 +64,8 @@ export default function Sidebar() {
     ...(isAdmin ? [{
       label: '管理',
       items: [
-        { to: '/admin', icon: Shield, label: '用户管理' },
-        { to: '/admin-skills', icon: Zap, label: '技能管理' },
+        { to: '/admin/users', icon: Users, label: '用户管理' },
+        { to: '/admin/skills', icon: Zap, label: '技能管理' },
         { to: '/settings', icon: Settings, label: '系统设置' },
         { to: '/sessions', icon: Clock, label: '会话历史' },
       ],
@@ -128,22 +121,27 @@ export default function Sidebar() {
       </nav>
 
       {/* User */}
-      <div className="border-t border-dark-border px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium text-white ${
-            isAdmin ? 'bg-accent-green' : 'bg-accent-purple'
-          }`}>
-            <User size={16} />
-          </div>
-          <div>
-            <div className="text-sm font-medium text-dark-text">
-              {user?.username ?? 'Loading...'}
-              {isAdmin && <span className="ml-1 text-xs text-accent-green">(管理员)</span>}
-            </div>
-            <div className="text-xs text-dark-text-secondary">{user?.email ?? ''}</div>
-          </div>
+      <NavLink
+        to="/profile"
+        className={`border-t border-dark-border px-4 py-3 flex items-center gap-3 transition-colors ${
+          location.pathname === '/profile'
+            ? 'bg-accent-blue/15 text-accent-blue'
+            : 'text-dark-text hover:bg-dark-card'
+        }`}
+      >
+        <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium text-white ${
+          isAdmin ? 'bg-accent-green' : 'bg-accent-purple'
+        }`}>
+          <User size={16} />
         </div>
-      </div>
+        <div>
+          <div className="text-sm font-medium">
+            {user?.username ?? 'Loading...'}
+            {isAdmin && <span className="ml-1 text-xs text-accent-green">(管理员)</span>}
+          </div>
+          <div className="text-xs text-dark-text-secondary">{user?.email ?? ''}</div>
+        </div>
+      </NavLink>
     </aside>
   )
 }

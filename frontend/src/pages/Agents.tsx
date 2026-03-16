@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bot, Plus, Search, Loader2 } from 'lucide-react'
+import { Bot, Plus, Search, Loader2, Shield, User } from 'lucide-react'
 import { fetchAgents, removeAgent } from '../store/agents'
+import { getMe } from '../lib/api'
 import type { BackendAgent } from '../types/agent'
+import type { AuthUser } from '../lib/api'
 
 // System agents that cannot be deleted
 const SYSTEM_AGENTS = ['main', 'skill-reviewer']
@@ -10,20 +12,33 @@ const SYSTEM_AGENTS = ['main', 'skill-reviewer']
 export default function Agents() {
   const navigate = useNavigate()
   const [agents, setAgents] = useState<BackendAgent[]>([])
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    fetchAgents()
-      .then(setAgents)
+    Promise.all([fetchAgents(), getMe().catch(() => null)])
+      .then(([agentsData, userData]) => {
+        setAgents(agentsData)
+        setUser(userData)
+      })
       .finally(() => setLoading(false))
   }, [])
 
-  const filtered = agents.filter(a => {
+  // Categorize agents
+  const systemAgents = agents.filter(a => SYSTEM_AGENTS.includes(a.id))
+  const myAgent = agents.find(a => a.id === user?.id)
+  const otherAgents = agents.filter(a => !SYSTEM_AGENTS.includes(a.id) && a.id !== user?.id)
+
+  // Filter function
+  const filterAgents = (list: BackendAgent[]) => {
+    if (!search.trim()) return list
     const term = search.toLowerCase()
-    const name = a.name || a.identity?.name || a.id || ''
-    return name.toLowerCase().includes(term) || (a.id || '').toLowerCase().includes(term)
-  })
+    return list.filter(a => {
+      const name = (a as any).displayName || a.name || a.identity?.name || a.id || ''
+      return name.toLowerCase().includes(term) || (a.id || '').toLowerCase().includes(term)
+    })
+  }
 
   const handleDelete = async (e: React.MouseEvent, agent: BackendAgent) => {
     e.stopPropagation()
@@ -34,6 +49,41 @@ export default function Agents() {
     }
   }
 
+  const AgentCard = ({ agent, showDelete = true }: { agent: BackendAgent; showDelete?: boolean }) => (
+    <div
+      key={agent.id}
+      className="rounded-xl border border-dark-border bg-dark-card p-5 hover:border-accent-blue/30 transition-colors cursor-pointer"
+      onClick={() => navigate(`/agents/${agent.id}`)}
+    >
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-dark-bg">
+            {agent.identity?.emoji ? (
+              <span className="text-lg">{agent.identity.emoji}</span>
+            ) : (
+              <Bot size={20} className="text-accent-blue" />
+            )}
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-dark-text">{(agent as any).displayName || agent.name || agent.identity?.name || agent.id}</div>
+            <div className="text-xs text-dark-text-secondary">{agent.id}</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-end gap-3">
+        {showDelete && (
+          <button
+            onClick={e => handleDelete(e, agent)}
+            className="text-xs text-accent-red/70 hover:text-accent-red"
+          >
+            删除
+          </button>
+        )}
+      </div>
+    </div>
+  )
+
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="animate-spin text-dark-text-secondary" size={32} /></div>
 
   return (
@@ -41,7 +91,7 @@ export default function Agents() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-dark-text">Agents 管理</h1>
-          <p className="mt-1 text-sm text-dark-text-secondary">管理和配置您的 AI Agents</p>
+          <p className="mt-1 text-sm text-dark-text-secondary">管理和配置 AI Agents</p>
         </div>
         <button
           onClick={() => navigate('/agents/create')}
@@ -53,7 +103,7 @@ export default function Agents() {
       </div>
 
       {/* Search */}
-      <div className="mb-4 flex items-center gap-4">
+      <div className="mb-6 flex items-center gap-4">
         <div className="flex items-center gap-2 rounded-lg bg-dark-card px-3 py-2">
           <Search size={16} className="text-dark-text-secondary" />
           <input
@@ -66,43 +116,50 @@ export default function Agents() {
         </div>
       </div>
 
-      {/* Agent Cards Grid */}
-      <div className="grid grid-cols-3 gap-4">
-        {filtered.map(agent => (
-          <div
-            key={agent.id}
-            className="rounded-xl border border-dark-border bg-dark-card p-5 hover:border-accent-blue/30 transition-colors cursor-pointer"
-            onClick={() => navigate(`/agents/${agent.id}`)}
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-dark-bg">
-                  {agent.identity?.emoji ? (
-                    <span className="text-lg">{agent.identity.emoji}</span>
-                  ) : (
-                    <Bot size={20} className="text-accent-blue" />
-                  )}
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-dark-text">{agent.name || agent.identity?.name || agent.id}</div>
-                  <div className="text-xs text-dark-text-secondary">{agent.id}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 flex items-center justify-end gap-3">
-              {!SYSTEM_AGENTS.includes(agent.id) && (
-                <button
-                  onClick={e => handleDelete(e, agent)}
-                  className="text-xs text-accent-red/70 hover:text-accent-red"
-                >
-                  删除
-                </button>
-              )}
-            </div>
+      {/* My Agent */}
+      {myAgent && (
+        <div className="mb-6">
+          <div className="mb-3 flex items-center gap-2">
+            <User size={18} className="text-accent-green" />
+            <h2 className="text-base font-semibold text-dark-text">我的 Agent</h2>
           </div>
-        ))}
-      </div>
+          <div className="grid grid-cols-3 gap-4">
+            <AgentCard agent={myAgent} showDelete={false} />
+          </div>
+        </div>
+      )}
+
+      {/* System Agents */}
+      {systemAgents.length > 0 && (
+        <div className="mb-6">
+          <div className="mb-3 flex items-center gap-2">
+            <Shield size={18} className="text-accent-purple" />
+            <h2 className="text-base font-semibold text-dark-text">系统 Agents</h2>
+            <span className="ml-2 rounded-full bg-accent-purple/10 px-2 py-0.5 text-xs text-accent-purple">{systemAgents.length}</span>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            {filterAgents(systemAgents).map(agent => (
+              <AgentCard key={agent.id} agent={agent} showDelete={false} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Other User Agents */}
+      {otherAgents.length > 0 && (
+        <div>
+          <div className="mb-3 flex items-center gap-2">
+            <Bot size={18} className="text-accent-blue" />
+            <h2 className="text-base font-semibold text-dark-text">其他用户 Agents</h2>
+            <span className="ml-2 rounded-full bg-accent-blue/10 px-2 py-0.5 text-xs text-accent-blue">{otherAgents.length}</span>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            {filterAgents(otherAgents).map(agent => (
+              <AgentCard key={agent.id} agent={agent} showDelete={true} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -59,5 +59,6 @@ cache
 .parquet
 .claude
 .claude/settings.local.json
+CLAUDE.md
 bridge/dist/
 bridge/node_modules/

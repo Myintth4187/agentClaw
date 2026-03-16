@@ -229,6 +229,18 @@ if m:
 "
 ```
 
+## Frontend Build Notes
+
+**Important:** The frontend is a static build (Vite → Nginx). After modifying frontend source files, you must rebuild and copy to the container:
+
+```bash
+cd frontend
+npm run build                           # Build production bundle
+docker cp dist/. openclaw-frontend:/usr/share/nginx/html/  # Copy to container
+```
+
+For Docker deployments, the frontend is built during image creation. Changes to source files require rebuilding the image or manually copying as shown above.
+
 ## WebSocket Protocol
 
 Frontend → Gateway → Bridge → OpenClaw Gateway (layered proxy):

@@ -2,10 +2,13 @@ import { Router } from "express";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import { createRequire } from "node:module";
 import mime from "mime-types";
 import type { BridgeConfig } from "../config.js";
 import type { BridgeGatewayClient } from "../gateway-client.js";
 import { asyncHandler, sanitizePath } from "../utils.js";
+
+const require = createRequire(import.meta.url);
 
 /**
  * Fetch user info from platform gateway
@@ -39,7 +42,7 @@ async function fetchAllUsers(
     });
     if (!resp.ok) return [];
     const data = await resp.json();
-    return data.users || [];
+    return data.users || data || [];
   } catch {
     return [];
   }
@@ -70,17 +73,13 @@ export function agentsRoutes(client: BridgeGatewayClient, config: BridgeConfig):
 
       // In multi-agent mode:
       // - Regular users only see their own agent
-      // - Admins see their own agent + main + system agents (skill-reviewer)
+      // - Admins see ALL agents (for dashboard stats and management)
       let agents = result?.agents || [];
       if (!isAdmin) {
         // Non-admin: only see their own agent
         agents = agents.filter((a) => a.id === agentId);
-      } else {
-        // Admin: see own agent + main + system agents
-        // System agents that should be visible to admin
-        const systemAgents = ["main", "skill-reviewer"];
-        agents = agents.filter((a) => a.id === agentId || systemAgents.includes(a.id));
       }
+      // Admin: see all agents (no filtering)
 
       // Enrich agents with display names for admin
       if (isAdmin && authHeader && config.proxyUrl) {
@@ -89,11 +88,24 @@ export function agentsRoutes(client: BridgeGatewayClient, config: BridgeConfig):
         const users = await fetchAllUsers(gatewayUrl, token);
         const userMap = new Map(users.map((u) => [u.id, u]));
 
+        const systemAgents = ["main", "skill-reviewer"];
         agents = agents.map((agent) => {
           const user = userMap.get(agent.id);
-          const displayName = user
-            ? `${user.username} (${agent.id.slice(0, 8)})`
-            : agent.identity?.name || agent.name || agent.id;
+          let displayName: string;
+          if (user) {
+            displayName = `${user.username} (${agent.id.slice(0, 8)})`;
+          } else if (systemAgents.includes(agent.id)) {
+            // System agents - show as-is
+            displayName = agent.id;
+          } else {
+            // For orphan agents (no associated user), show with a marker
+            const baseName = agent.identity?.name || agent.name;
+            if (baseName && baseName !== agent.id) {
+              displayName = `${baseName} [未关联用户]`;
+            } else {
+              displayName = `${agent.id.slice(0, 8)}... [未关联用户]`;
+            }
+          }
           return {
             ...agent,
             displayName,
@@ -237,10 +249,186 @@ export function agentsRoutes(client: BridgeGatewayClient, config: BridgeConfig):
     } catch (err) {
       const msg = (err as Error).message;
       if (msg.includes("not found")) {
-        res.status(404).json({ detail: "Agent not found" });
+        // Agent not found in OpenClaw registry, but may exist in filesystem
+        // Try to clean up filesystem directly
+        const baseDir = config.openclawHome;
+        const agentConfigDir = path.join(baseDir, "agents", agentId);
+        const agentWorkspaceDir = getAgentRootDir(baseDir, agentId);
+
+        let cleaned = false;
+        if (fs.existsSync(agentConfigDir)) {
+          try {
+            fs.rmSync(agentConfigDir, { recursive: true });
+            cleaned = true;
+          } catch { /* ignore */ }
+        }
+        if (fs.existsSync(agentWorkspaceDir)) {
+          try {
+            fs.rmSync(agentWorkspaceDir, { recursive: true });
+            cleaned = true;
+          } catch { /* ignore */ }
+        }
+
+        if (cleaned) {
+          res.json({ ok: true, warning: "Agent was not registered, cleaned up filesystem data" });
+        } else {
+          res.status(404).json({ detail: "Agent not found" });
+        }
       } else {
         res.status(500).json({ detail: msg });
       }
+    }
+  }));
+
+  // GET /api/agents/:agentId/status — get agent sandbox status
+  router.get("/agents/:agentId/status", asyncHandler(async (req, res) => {
+    const agentId = req.params.agentId;
+
+    // Get container status directly from Docker
+    let status = "none";
+    let cpuPercent: number | null = null;
+    let memoryUsage: string | null = null;
+    let memoryPercent: number | null = null;
+
+    try {
+      const { execSync } = await import("node:child_process");
+
+      // OpenClaw creates containers with name format: openclaw-sbx-agent-<shortened-agentId>
+      // We need to find containers that match the start of our agentId
+      const agentIdPrefix = agentId.slice(0, 20); // Use first 20 chars as prefix
+
+      // Get all running sandbox containers
+      const runningContainers = execSync(
+        `docker ps --filter "name=openclaw-sbx-agent-" --filter "status=running" --format "{{.Names}}" 2>/dev/null || echo ""`,
+        { encoding: "utf-8", timeout: 5000 }
+      ).trim();
+
+      // Find container that matches this agent (by prefix match)
+      let containerName: string | null = null;
+      if (runningContainers) {
+        const containers = runningContainers.split("\n");
+        for (const name of containers) {
+          // Container name format: openclaw-sbx-agent-<agentId-with-dashes>
+          const containerAgentPart = name.replace("openclaw-sbx-agent-", "");
+          // Compare first 20 chars (ignore dash differences)
+          const normalizedContainer = containerAgentPart.replace(/-/g, "").slice(0, 20);
+          const normalizedAgent = agentId.replace(/-/g, "").slice(0, 20);
+          if (normalizedContainer === normalizedAgent) {
+            containerName = name;
+            break;
+          }
+        }
+      }
+
+      if (containerName) {
+        status = "running";
+
+        // Get stats for running container
+        const stats = execSync(
+          `docker stats ${containerName} --no-stream --format "{{.CPUPerc}},{{.MemUsage}},{{.MemPerc}}" 2>/dev/null || echo ""`,
+          { encoding: "utf-8", timeout: 5000 }
+        ).trim();
+
+        if (stats) {
+          const [cpu, mem, memPerc] = stats.split(",");
+          cpuPercent = parseFloat(cpu?.replace("%", "")) || null;
+          memoryUsage = mem?.trim() || null;
+          memoryPercent = parseFloat(memPerc?.replace("%", "")) || null;
+        }
+      } else {
+        // Check if container exists but is not running
+        const allContainers = execSync(
+          `docker ps -a --filter "name=openclaw-sbx-agent-" --format "{{.Names}}" 2>/dev/null || echo ""`,
+          { encoding: "utf-8", timeout: 5000 }
+        ).trim();
+
+        if (allContainers) {
+          const containers = allContainers.split("\n");
+          for (const name of containers) {
+            const containerAgentPart = name.replace("openclaw-sbx-agent-", "");
+            const normalizedContainer = containerAgentPart.replace(/-/g, "").slice(0, 20);
+            const normalizedAgent = agentId.replace(/-/g, "").slice(0, 20);
+            if (normalizedContainer === normalizedAgent) {
+              status = "stopped";
+              break;
+            }
+          }
+        }
+      }
+
+      res.json({
+        status,
+        cpu_percent: cpuPercent,
+        memory_usage: memoryUsage,
+        memory_percent: memoryPercent,
+      });
+    } catch {
+      // Return none on error
+      res.json({
+        status: "none",
+        cpu_percent: null,
+        memory_usage: null,
+        memory_percent: null,
+      });
+    }
+  }));
+
+  // Helper function to find container name by agentId
+  function findContainerName(agentId: string, runningOnly: boolean = false): string | null {
+    try {
+      const { execSync } = require("node:child_process");
+      const cmd = runningOnly
+        ? `docker ps --filter "name=openclaw-sbx-agent-" --filter "status=running" --format "{{.Names}}" 2>/dev/null || echo ""`
+        : `docker ps -a --filter "name=openclaw-sbx-agent-" --format "{{.Names}}" 2>/dev/null || echo ""`;
+
+      const containers = execSync(cmd, { encoding: "utf-8", timeout: 5000 }).trim();
+      if (!containers) return null;
+
+      // Normalize agentId: remove all dashes and lowercase
+      const normalizedAgent = agentId.replace(/-/g, "").toLowerCase();
+
+      for (const name of containers.split("\n")) {
+        const containerAgentPart = name.replace("openclaw-sbx-agent-", "");
+        // Normalize container agent part the same way
+        const normalizedContainer = containerAgentPart.replace(/-/g, "").toLowerCase();
+        // Check if container starts with the same prefix (first 20 chars)
+        if (normalizedContainer.slice(0, 20) === normalizedAgent.slice(0, 20)) {
+          return name;
+        }
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  // DELETE /api/agents/:agentId/container — stop and remove sandbox container
+  router.delete("/agents/:agentId/container", asyncHandler(async (req, res) => {
+    const agentId = req.params.agentId;
+
+    // Only admins can delete containers
+    const isAdmin = req.headers["x-is-admin"] === "true";
+    if (!isAdmin) {
+      res.status(403).json({ detail: "Admin access required" });
+      return;
+    }
+
+    try {
+      const { execSync } = await import("node:child_process");
+      const containerName = findContainerName(agentId);
+
+      if (!containerName) {
+        res.status(404).json({ detail: "Container not found" });
+        return;
+      }
+
+      // Stop and remove the container
+      execSync(`docker stop ${containerName} 2>/dev/null || true`, { encoding: "utf-8", timeout: 15000 });
+      execSync(`docker rm ${containerName} 2>/dev/null || true`, { encoding: "utf-8", timeout: 10000 });
+
+      res.json({ ok: true, status: "deleted" });
+    } catch (err) {
+      res.status(500).json({ detail: (err as Error).message });
     }
   }));
 

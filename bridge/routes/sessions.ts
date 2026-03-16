@@ -31,13 +31,27 @@ export function sessionsRoutes(client: BridgeGatewayClient): Router {
   router.get("/sessions", asyncHandler(async (req, res) => {
     // Extract agentId from header for multi-agent routing
     const agentId = req.headers["x-agent-id"] as string | undefined;
+    const isAdmin = req.headers["x-is-admin"] === "true";
+    // Admin can specify which agent's sessions to view
+    // If no agentId specified, admin sees all sessions (for dashboard stats)
+    let targetAgentId = agentId;
+    if (isAdmin && req.query.agentId) {
+      targetAgentId = req.query.agentId as string;
+    } else if (isAdmin && !req.query.agentId) {
+      // Admin without specific agentId: get all sessions by not passing agentId
+      targetAgentId = undefined;
+    }
 
     try {
-      const result = await client.request<OpenclawSessionsListResult>("sessions.list", {
+      const params: Record<string, unknown> = {
         includeLastMessage: true,
         includeDerivedTitles: true,
-        agentId, // Pass agentId to filter sessions for this agent
-      });
+      };
+      // Only pass agentId if specified (for filtering)
+      if (targetAgentId) {
+        params.agentId = targetAgentId;
+      }
+      const result = await client.request<OpenclawSessionsListResult>("sessions.list", params);
 
       const sessions = (result.sessions || []).map((s: OpenclawSessionRow) => {
         // Extract display-friendly session name from agent:{agentId}:{sessionKey}

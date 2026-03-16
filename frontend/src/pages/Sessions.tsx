@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { listSessions, deleteSession, getSession } from '../lib/api'
-import type { Session, SessionDetail } from '../lib/api'
+import { listSessions, deleteSession, getSession, listAgents } from '../lib/api'
+import type { Session, SessionDetail, AgentInfo } from '../lib/api'
 import {
   Clock,
   Loader2,
@@ -11,6 +11,7 @@ import {
   MessageSquare,
   User,
   Bot,
+  ChevronDown,
 } from 'lucide-react'
 
 export default function Sessions() {
@@ -19,18 +20,29 @@ export default function Sessions() {
   const [detail, setDetail] = useState<SessionDetail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  const [agents, setAgents] = useState<AgentInfo[]>([])
+  const [selectedAgentId, setSelectedAgentId] = useState<string>('')
+  const [isAdmin, setIsAdmin] = useState(false)
 
   const fetchSessionList = () => {
     setLoading(true)
-    listSessions()
+    listSessions(selectedAgentId || undefined)
       .then(setSessions)
       .catch(() => setSessions([]))
       .finally(() => setLoading(false))
   }
 
   useEffect(() => {
-    fetchSessionList()
+    // Check if user is admin and fetch agents list
+    listAgents().then(r => {
+      setAgents(r.agents || [])
+      setIsAdmin(r.agents?.some((a: AgentInfo) => a.id === 'main') || false)
+    }).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    fetchSessionList()
+  }, [selectedAgentId])
 
   const handleDelete = async (key: string) => {
     if (!confirm('确定删除该会话？')) return
@@ -73,13 +85,33 @@ export default function Sessions() {
             <h1 className="text-2xl font-bold text-dark-text">会话历史</h1>
             <p className="mt-1 text-sm text-dark-text-secondary">查看所有 Agent 的对话记录</p>
           </div>
-          <button
-            onClick={fetchSessionList}
-            className="flex items-center gap-1.5 rounded-lg border border-dark-border px-3 py-1.5 text-xs text-dark-text-secondary hover:text-dark-text transition-colors"
-          >
-            <RefreshCw size={14} />
-            刷新
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Agent Selector for Admin */}
+            {isAdmin && agents.length > 0 && (
+              <div className="relative">
+                <select
+                  value={selectedAgentId}
+                  onChange={(e) => setSelectedAgentId(e.target.value)}
+                  className="appearance-none rounded-lg border border-dark-border bg-dark-card px-3 py-1.5 pr-8 text-xs text-dark-text focus:border-accent-blue focus:outline-none"
+                >
+                  <option value="">所有 Agents</option>
+                  {agents.map(agent => (
+                    <option key={agent.id} value={agent.id}>
+                      {agent.identity?.name || agent.name || agent.id}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-dark-text-secondary pointer-events-none" />
+              </div>
+            )}
+            <button
+              onClick={fetchSessionList}
+              className="flex items-center gap-1.5 rounded-lg border border-dark-border px-3 py-1.5 text-xs text-dark-text-secondary hover:text-dark-text transition-colors"
+            >
+              <RefreshCw size={14} />
+              刷新
+            </button>
+          </div>
         </div>
 
         {loading ? (
