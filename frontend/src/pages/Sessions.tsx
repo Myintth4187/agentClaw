@@ -27,7 +27,20 @@ export default function Sessions() {
   const fetchSessionList = () => {
     setLoading(true)
     listSessions(selectedAgentId || undefined)
-      .then(setSessions)
+      .then((data) => {
+        setSessions(data)
+        // Auto-select first session if none selected and list is not empty
+        if (!selectedKey && data.length > 0) {
+          const firstKey = data[0].key
+          setSelectedKey(firstKey)
+          // Load first session detail
+          setDetailLoading(true)
+          getSession(firstKey)
+            .then(setDetail)
+            .catch(() => setDetail(null))
+            .finally(() => setDetailLoading(false))
+        }
+      })
       .catch(() => setSessions([]))
       .finally(() => setLoading(false))
   }
