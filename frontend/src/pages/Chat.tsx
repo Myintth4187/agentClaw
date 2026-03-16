@@ -386,11 +386,13 @@ export default function Chat() {
                 }).catch(() => {})
 
                 // Debounce: reset the completion timer on every "final"
+                // Use short delay (500ms) to handle multi-turn conversations with rapid successive finals
+                // without keeping the loading spinner visible too long
                 if (wsFinalTimerRef.current) clearTimeout(wsFinalTimerRef.current)
                 wsFinalTimerRef.current = setTimeout(() => {
-                  // No new "final" events for 10s — agent is truly done
+                  // No new "final" events for 500ms — agent is truly done
                   wsCompletedRef.current = true
-                }, 10000)
+                }, 500)
               }
             }
           }
