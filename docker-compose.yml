@@ -1,0 +1,137 @@
+# OpenClaw Multi-Tenant Deployment
+#
+# Architecture (Multi-Agent):
+#   frontend (public:3080) → gateway (internal+external) → openclaw-shared (single instance)
+#                                  ↕                              ↓
+#                            postgres (internal)           agent sandboxes (per-user isolation)
+#
+# In the multi-agent architecture, all users share a single OpenClaw Gateway instance.
+# Each user gets an Agent with sandbox isolation (Docker containers per-agent).
+
+name: openclaw
+
+services:
+  postgres:
+    container_name: openclaw-postgres
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: frameclaw
+      POSTGRES_PASSWORD: frameclaw
+      POSTGRES_DB: frameclaw_platform
+    ports:
+      - "15432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - openclaw-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U frameclaw -d frameclaw_platform"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Shared OpenClaw instance - serves all users with Agent sandbox isolation
+  openclaw-shared:
+    container_name: openclaw-shared
+    image: ${OPENCLAW_IMAGE:-openclaw:latest}
+    command: ["node", "dist/start.js"]
+    environment:
+      FRAMECLAW_PROXY__URL: "http://gateway:8080/llm/v1"
+      FRAMECLAW_PROXY__TOKEN: "platform-shared-token"  # Shared token for multi-agent mode
+      FRAMECLAW_AGENTS__DEFAULTS__MODEL: ${DEFAULT_MODEL:-stepfun/step-3.5-flash:free}
+      # Sandbox configuration for agent isolation
+      FRAMECLAW_AGENTS__DEFAULTS__SANDBOX__MODE: "all"
+      FRAMECLAW_AGENTS__DEFAULTS__SANDBOX__SCOPE: "agent"
+      FRAMECLAW_AGENTS__DEFAULTS__SANDBOX__PRUNE__IDLEHOURS: "2"
+      BRIDGE_ENABLE_AUTO_REVIEW: "true"
+      # OPENCLAW_HOME must match host path so sandbox bind mounts resolve correctly
+      OPENCLAW_HOME: ${HOME}/.openclaw
+      # Search API keys for web_search tool (auto-detected by OpenClaw)
+      KIMI_API_KEY: ${KIMI_API_KEY:-}
+      MOONSHOT_API_KEY: ${MOONSHOT_API_KEY:-}
+      BRAVE_API_KEY: ${BRAVE_API_KEY:-}
+      PERPLEXITY_API_KEY: ${PERPLEXITY_API_KEY:-}
+    volumes:
+      - ${HOME}/.openclaw:${HOME}/.openclaw  # Same path on host and in container
+      - /var/run/docker.sock:/var/run/docker.sock  # For sandbox containers
+      - curated-skills:/app/curated-skills
+      - ./bridge/dist:/app/dist  # Mount local bridge code
+    networks:
+      - openclaw-internal
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  gateway:
+    container_name: openclaw-gateway
+    build: ./platform
+    ports:
+      - "8080:8080"
+    environment:
+      PLATFORM_DATABASE_URL: postgresql+asyncpg://frameclaw:frameclaw@postgres:5432/frameclaw_platform
+      PLATFORM_JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+
+      # LLM API Keys — ONLY here, never in user containers
+      PLATFORM_ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      PLATFORM_OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      PLATFORM_DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      PLATFORM_OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      PLATFORM_DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      PLATFORM_AIHUBMIX_API_KEY: ${AIHUBMIX_API_KEY:-}
+      PLATFORM_MOONSHOT_API_KEY: ${MOONSHOT_API_KEY:-}
+      PLATFORM_KIMI_API_KEY: ${KIMI_API_KEY:-}
+      PLATFORM_ZHIPU_API_KEY: ${ZHIPU_API_KEY:-}
+
+      # Self-hosted vLLM
+      PLATFORM_HOSTED_VLLM_API_KEY: ${HOSTED_VLLM_API_KEY:-}
+      PLATFORM_HOSTED_VLLM_API_BASE: ${HOSTED_VLLM_API_BASE:-}
+
+      # Unified LLM endpoint (OpenAI-compatible) - for OpenRouter, custom proxies, etc.
+      PLATFORM_LLM_API_BASE: ${LLM_API_BASE:-}
+      PLATFORM_LLM_API_KEY: ${LLM_API_KEY:-}
+
+      PLATFORM_DEFAULT_MODEL: ${DEFAULT_MODEL:-dashscope/qwen3-coder-plus}
+      PLATFORM_OPENCLAW_IMAGE: ${OPENCLAW_IMAGE:-openclaw:latest}
+      PLATFORM_CONTAINER_NETWORK: openclaw-internal
+      PLATFORM_CONTAINER_DATA_DIR: /data/openclaw-users
+      # Use docker-compose service name instead of Docker API lookup
+      PLATFORM_DEV_OPENCLAW_URL: http://openclaw-shared:18080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # Docker API access for container management
+      - userdata:/data/openclaw-users
+      - curated-skills:/app/curated-skills
+    networks:
+      - openclaw-internal   # talk to postgres + openclaw-shared
+      - openclaw-external   # accept traffic from frontend / public
+    depends_on:
+      postgres:
+        condition: service_healthy
+      openclaw-shared:
+        condition: service_started
+
+  frontend:
+    container_name: openclaw-frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-}
+    ports:
+      - "3080:3000"
+    networks:
+      - openclaw-external
+    depends_on:
+      - gateway
+
+networks:
+  openclaw-internal:
+    name: openclaw-internal    # explicit name — prevents Compose project-name prefix
+    driver: bridge
+    internal: false  # allow internet access for user containers to download tools
+  openclaw-external:
+    name: openclaw-external
+    driver: bridge
+
+volumes:
+  pgdata:
+  userdata:
+  curated-skills:
