@@ -230,22 +230,23 @@ async def proxy_chat_completion(
     if settings.dev_openclaw_url:
         container = None
         user = None
-    elif container_token == PLATFORM_SHARED_TOKEN:
-        # Multi-agent mode: shared platform token
-        # Skip user validation for now - the agent sandbox provides isolation
-        # TODO: Pass agent_id through OpenClaw to enable per-user quota tracking
-        container = None
-        user = None
     else:
         container = None
         user = None
 
         # Multi-agent mode: use agent_id (which is user_id) to identify user
+        # This works for both shared platform token and individual container tokens
         if agent_id:
             user_result = await db.execute(select(User).where(User.id == agent_id))
             user = user_result.scalar_one_or_none()
             if user is None:
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid agent_id")
+        elif container_token == PLATFORM_SHARED_TOKEN:
+            # Shared token without agent_id is invalid
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Missing X-Agent-Id header for shared token authentication"
+            )
         else:
             # Try JWT API token first
             jwt_payload = decode_token(container_token)
@@ -263,6 +264,12 @@ async def proxy_chat_completion(
                 container = result.scalar_one_or_none()
                 if container is None:
                     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+                # Check token expiration
+                if container.is_token_expired():
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Container token has expired, please re-authenticate"
+                    )
                 user_result = await db.execute(select(User).where(User.id == container.user_id))
                 user = user_result.scalar_one_or_none()
 

@@ -221,7 +221,6 @@ SkillClaw 的 **frameClaw** 多租户架构实现：
 
 | 项目 | 许可证 | 用途 |
 |------|--------|------|
-| MultiUserClaw | MIT | 提供多租户基础代码及架构灵感来源 |
 | OpenClaw | MIT | Agent 引擎（零侵入集成） |
 | nanobot | MIT | AI 助手框架参考 |
 

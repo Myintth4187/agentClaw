@@ -43,6 +43,16 @@ elif [ -d "$BUILTIN_SKILLS/skill-creator" ]; then
   echo "[entrypoint] skill-creator synced from builtin"
 fi
 
+# Sync skills to platform-skills volume for gateway to scan
+# This is read-only; user-submitted curated skills go to a separate location
+PLATFORM_SKILLS_DIR="/app/platform-skills"
+if [ -d "$PLATFORM_SKILLS_DIR" ]; then
+  # Clear and repopulate platform-skills (keep in sync with ~/.openclaw/skills)
+  rm -rf "${PLATFORM_SKILLS_DIR:?}/"*
+  cp -r ~/.openclaw/skills/*/ "$PLATFORM_SKILLS_DIR/" 2>/dev/null || true
+  echo "[entrypoint] Platform skills synced to volume: $(ls -1 "$PLATFORM_SKILLS_DIR" 2>/dev/null | wc -l) skills"
+fi
+
 # If FRAMECLAW_PROXY__URL is set, we're running in platform mode
 if [ -n "$FRAMECLAW_PROXY__URL" ]; then
   echo "[entrypoint] Platform mode detected"

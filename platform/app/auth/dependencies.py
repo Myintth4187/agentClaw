@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.service import decode_token, get_user_by_id
+from app.config import settings
 from app.db.engine import get_db
 from app.db.models import Container, User
 
@@ -50,6 +51,12 @@ async def get_user_flexible(
         select(Container).where(Container.container_token == token)
     )).scalar_one_or_none()
     if container is not None:
+        # Check token expiration
+        if container.is_token_expired():
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Container token has expired, please re-authenticate"
+            )
         user = await get_user_by_id(db, container.user_id)
         if user is not None and user.is_active:
             return user

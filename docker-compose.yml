@@ -55,9 +55,8 @@ services:
     volumes:
       - ${HOME}/.openclaw:${HOME}/.openclaw  # Same path on host and in container
       - /var/run/docker.sock:/var/run/docker.sock  # For sandbox containers
-      - curated-skills:/app/curated-skills
+      - platform-skills:/app/platform-skills  # Platform skills (read-only, from project)
       - ./skills:/app/project-skills:ro  # Mount project skills directory
-      - ./bridge/dist:/app/dist  # Mount local bridge code
     networks:
       - openclaw-internal
     depends_on:
@@ -102,7 +101,8 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock  # Docker API access for container management
       - userdata:/data/openclaw-users
-      - curated-skills:/app/curated-skills
+      - curated-skills:/app/curated-skills  # User-submitted skills after admin review
+      - platform-skills:/app/platform-skills  # Platform built-in skills (read-only)
       - ./config:/app/config:ro  # Mount config directory for SOUL.md and other configs
     networks:
       - openclaw-internal   # talk to postgres + openclaw-shared
@@ -138,4 +138,5 @@ networks:
 volumes:
   pgdata:
   userdata:
-  curated-skills:
+  curated-skills:  # User-submitted curated skills (admin upload)
+  platform-skills:  # Platform built-in skills (from project skills/ dir)

@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import httpx
+import logging
 from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket, WebSocketDisconnect, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,6 +18,8 @@ from app.config import settings
 from app.container.shared_manager import ensure_shared_container
 from app.db.engine import async_session, get_db
 from app.db.models import User
+
+logger = logging.getLogger(__name__)
 
 
 def _sign_is_admin(agent_id: str, is_admin: bool) -> str:
@@ -27,6 +30,19 @@ def _sign_is_admin(agent_id: str, is_admin: bool) -> str:
     # Use lowercase string for consistent verification
     admin_str = "true" if is_admin else "false"
     message = f"{agent_id}:{admin_str}:{settings.bridge_token}"
+    return hmac.new(
+        settings.bridge_token.encode(),
+        message.encode(),
+        hashlib.sha256,
+    ).hexdigest()[:16]
+
+
+def _sign_agent_id(agent_id: str) -> str:
+    """Sign agentId to prevent tampering.
+
+    Bridge will verify this signature to ensure agentId came from Platform Gateway.
+    """
+    message = f"{agent_id}:{settings.bridge_token}"
     return hmac.new(
         settings.bridge_token.encode(),
         message.encode(),
@@ -100,6 +116,8 @@ async def proxy_http(
                     "content-type": request.headers.get("content-type", "application/json"),
                     # Add agentId header for multi-agent routing (use uppercase to match Bridge)
                     "X-Agent-Id": user.id,
+                    # Sign agentId to prevent tampering
+                    "X-Agent-Id-Sig": _sign_agent_id(user.id),
                     # Add admin flag for admin users
                     "X-Is-Admin": "true" if user.role == "admin" else "false",
                     # Forward authorization header for bridge authentication
@@ -215,22 +233,43 @@ async def proxy_websocket(
             except websockets.ConnectionClosed:
                 pass
 
+        # Track last pong time for connection health check
+        last_pong = asyncio.get_event_loop().time()
+
         async def keepalive():
-            """Send periodic pings to keep connection alive."""
-            nonlocal last_activity
+            """Send periodic pings and verify pong responses to detect dead connections."""
+            nonlocal last_activity, last_pong
+            pong_timeout = 10  # seconds to wait for pong response
+            max_idle_time = 120  # max seconds without any activity before forcing close
+
             while True:
                 try:
                     await asyncio.sleep(30)
                     now = asyncio.get_event_loop().time()
-                    # If no activity for 30 seconds, send a ping frame
+
+                    # Check if connection has been idle too long (no data in either direction)
+                    if now - last_activity >= max_idle_time:
+                        logger.warning("[ws-proxy] Connection idle for %ds, closing", max_idle_time)
+                        break
+
+                    # If no activity for 30 seconds, send a ping and wait for pong
                     if now - last_activity >= 30:
                         try:
-                            await upstream.ping()
-                        except Exception:
+                            # Send ping and wait for pong with timeout
+                            pong_waiter = await upstream.ping()
+                            await asyncio.wait_for(pong_waiter, timeout=pong_timeout)
+                            last_pong = asyncio.get_event_loop().time()
+                            logger.debug("[ws-proxy] Pong received, connection healthy")
+                        except asyncio.TimeoutError:
+                            logger.error("[ws-proxy] Pong timeout after %ds, connection dead", pong_timeout)
+                            break
+                        except Exception as e:
+                            logger.error("[ws-proxy] Ping failed: %s", e)
                             break
                 except asyncio.CancelledError:
                     break
-                except Exception:
+                except Exception as e:
+                    logger.error("[ws-proxy] Keepalive error: %s", e)
                     break
 
         tasks = [

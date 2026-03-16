@@ -1,6 +1,6 @@
 """SQLAlchemy ORM models for the platform."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import uuid
 
 from sqlalchemy import (
@@ -45,12 +45,24 @@ class Container(Base):
     user_id: Mapped[str] = mapped_column(String(36), nullable=False, unique=True, index=True)
     docker_id: Mapped[str] = mapped_column(String(128), nullable=True)  # Docker container ID
     container_token: Mapped[str] = mapped_column(String(128), nullable=False, unique=True, index=True)
+    # Token expiration for security (default 30 days)
+    token_expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=lambda: datetime.utcnow() + timedelta(days=30))
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="creating")
     # Status: creating | running | paused | archived
     internal_host: Mapped[str] = mapped_column(String(64), nullable=True)
     internal_port: Mapped[int] = mapped_column(Integer, nullable=True, default=18080)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     last_active_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    def is_token_expired(self) -> bool:
+        """Check if container token has expired."""
+        return datetime.utcnow() > self.token_expires_at
+
+    def refresh_token(self) -> None:
+        """Generate new token and extend expiration."""
+        import uuid
+        self.container_token = str(uuid.uuid4())
+        self.token_expires_at = datetime.utcnow() + timedelta(days=30)
 
 
 class UsageRecord(Base):
@@ -64,7 +76,10 @@ class UsageRecord(Base):
     input_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     output_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     total_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), index=True)
+
+    # Retention policy: records older than 90 days are automatically deleted
+    # This is enforced by _cleanup_old_usage_records() in main.py
 
 
 class AuditLog(Base):

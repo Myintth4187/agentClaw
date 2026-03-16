@@ -174,19 +174,45 @@ export function skillsRoutes(config: BridgeConfig, client: BridgeGatewayClient):
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2), "utf-8");
   }
 
+  // Verify agentId signature from Platform Gateway
+  function verifyAgentId(agentId: string, signature: string | undefined): boolean {
+    if (!signature) return false;
+    const expected = crypto
+      .createHmac("sha256", config.bridgeToken)
+      .update(`${agentId}:${config.bridgeToken}`)
+      .digest("hex")
+      .slice(0, 16);
+    return signature === expected;
+  }
+
   // Get agent ID from request header (set by platform skill) or query param (for frontend compatibility)
+  // Requires signature verification to prevent tampering
   // Priority: header > query > default "main"
-  // This ensures agents can only operate on their own skills
   function getAgentIdFromRequest(req: Request): string {
     const headerAgentId = req.headers["x-agent-id"] as string | undefined;
+    const headerSig = req.headers["x-agent-id-sig"] as string | undefined;
+
     if (headerAgentId && /^[a-z0-9][a-z0-9_-]*$/.test(headerAgentId)) {
+      // Verify signature for non-main agents
+      if (headerAgentId !== "main" && !verifyAgentId(headerAgentId, headerSig)) {
+        console.error(`[skills] Invalid agentId signature for ${headerAgentId}`);
+        throw new Error("Invalid agentId signature");
+      }
       return headerAgentId;
     }
-    // Fallback to query param for frontend compatibility, but validate
+
+    // Fallback to query param (also requires signature)
     const queryAgentId = req.query.agentId as string | undefined;
+    const querySig = req.query.agentIdSig as string | undefined;
+
     if (queryAgentId && /^[a-z0-9][a-z0-9_-]*$/.test(queryAgentId)) {
+      if (queryAgentId !== "main" && !verifyAgentId(queryAgentId, querySig)) {
+        console.error(`[skills] Invalid agentId signature for ${queryAgentId}`);
+        throw new Error("Invalid agentId signature");
+      }
       return queryAgentId;
     }
+
     return "main";
   }
 

@@ -55,7 +55,12 @@ class Settings(BaseSettings):
     container_data_dir: str = "/data/openclaw-users"
 
     # Curated skills directory (shared volume in Docker, local dir in dev)
+    # This is for user-submitted skills after admin review
     curated_skills_dir: str = "/app/curated-skills"
+
+    # Platform skills directory (read-only, synced from project skills/ directory)
+    # These are built-in skills that can be toggled visible/hidden by admin
+    platform_skills_dir: str = "/app/platform-skills"
 
     # Idle management
     container_idle_pause_minutes: int = 30

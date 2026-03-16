@@ -53,6 +53,102 @@ async def _ensure_database() -> None:
         await conn.close()
 
 
+async def _cleanup_temp_skill_submissions() -> None:
+    """Clean up expired temporary skill submission files (older than 7 days)."""
+    from pathlib import Path
+    import shutil
+    from datetime import datetime, timedelta
+
+    temp_dir = Path("/tmp/skill-submissions")
+    if not temp_dir.exists():
+        return
+
+    cutoff = datetime.now() - timedelta(days=7)
+    cleaned = 0
+    failed = 0
+
+    for entry in temp_dir.iterdir():
+        if not entry.is_dir():
+            continue
+        try:
+            # Check modification time
+            stat = entry.stat()
+            mtime = datetime.fromtimestamp(stat.st_mtime)
+            if mtime < cutoff:
+                shutil.rmtree(entry)
+                cleaned += 1
+                logger.debug("Cleaned up temp skill dir: %s", entry)
+        except Exception as e:
+            failed += 1
+            logger.warning("Failed to clean up temp skill dir %s: %s", entry, e)
+
+    if cleaned > 0 or failed > 0:
+        logger.info("Temp skill cleanup: %d cleaned, %d failed", cleaned, failed)
+
+
+async def _sync_platform_skills() -> None:
+    """Sync platform skills from filesystem to database on startup."""
+    from pathlib import Path
+    import re
+    from sqlalchemy import select
+    from sqlalchemy.ext.asyncio import AsyncSession
+    from app.db.engine import async_session
+    from app.db.models import PlatformSkillVisibility
+
+    platform_dir = Path(settings.platform_skills_dir)
+    if not platform_dir.exists():
+        logger.info("Platform skills directory does not exist: %s", platform_dir)
+        return
+
+    async with async_session() as db:
+        added = 0
+        for skill_dir in platform_dir.iterdir():
+            if not skill_dir.is_dir():
+                continue
+
+            skill_name = skill_dir.name
+            skill_md = skill_dir / "SKILL.md"
+            if not skill_md.exists():
+                continue
+
+            # Check if already exists
+            existing = (await db.execute(
+                select(PlatformSkillVisibility).where(PlatformSkillVisibility.skill_name == skill_name)
+            )).scalar_one_or_none()
+
+            if existing is None:
+                # Parse description from SKILL.md
+                try:
+                    content = skill_md.read_text(encoding='utf-8')
+                    # Extract description from frontmatter
+                    desc_match = re.search(r'^description:\s*(.+)$', content, re.MULTILINE)
+                    description = desc_match.group(1).strip() if desc_match else ""
+
+                    # Extract requirements from metadata
+                    reqs_match = re.search(r'requires.*?bins:\s*\[([^\]]+)\]', content)
+                    requirements = reqs_match.group(1) if reqs_match else ""
+                except Exception:
+                    description = ""
+                    requirements = ""
+
+                skill = PlatformSkillVisibility(
+                    skill_name=skill_name,
+                    is_visible=True,  # Default to visible
+                    description=description,
+                    category="general",
+                    requirements=requirements,
+                )
+                db.add(skill)
+                added += 1
+                logger.info("Added platform skill: %s", skill_name)
+
+        await db.commit()
+        if added > 0:
+            logger.info("Platform skills synced: %d new skills added", added)
+        else:
+            logger.info("Platform skills sync: no new skills found")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Ensure the target database exists before creating tables
@@ -60,8 +156,89 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables verified")
+
+    # Sync platform skills from filesystem to database
+    await _sync_platform_skills()
+
+    # Clean up expired temp skill submissions on startup
+    await _cleanup_temp_skill_submissions()
+
+    # Clean up old usage records on startup
+    await _cleanup_old_usage_records()
+
+    # Start background task for periodic cleanup (every 6 hours)
+    cleanup_task = asyncio.create_task(_periodic_cleanup())
+
     yield
+
+    # Cancel cleanup task on shutdown
+    cleanup_task.cancel()
+    try:
+        await cleanup_task
+    except asyncio.CancelledError:
+        pass
     await engine.dispose()
+
+
+async def _refresh_container_tokens() -> None:
+    """Refresh container tokens that are about to expire (within 7 days)."""
+    from datetime import datetime, timedelta
+    from sqlalchemy import select
+    from app.db.engine import async_session
+    from app.db.models import Container
+
+    async with async_session() as db:
+        # Find tokens expiring within 7 days
+        threshold = datetime.utcnow() + timedelta(days=7)
+        result = await db.execute(
+            select(Container).where(Container.token_expires_at < threshold)
+        )
+        containers = result.scalars().all()
+
+        refreshed = 0
+        for container in containers:
+            try:
+                container.refresh_token()
+                refreshed += 1
+                logger.debug("Refreshed token for container %s", container.id)
+            except Exception as e:
+                logger.error("Failed to refresh token for container %s: %s", container.id, e)
+
+        if refreshed > 0:
+            await db.commit()
+            logger.info("Refreshed %d container tokens", refreshed)
+
+
+async def _cleanup_old_usage_records() -> None:
+    """Delete usage records older than 90 days to prevent unlimited growth."""
+    from datetime import datetime, timedelta
+    from sqlalchemy import delete
+    from app.db.engine import async_session
+    from app.db.models import UsageRecord
+
+    async with async_session() as db:
+        cutoff = datetime.utcnow() - timedelta(days=90)
+        result = await db.execute(
+            delete(UsageRecord).where(UsageRecord.created_at < cutoff)
+        )
+        deleted = result.rowcount
+        if deleted > 0:
+            await db.commit()
+            logger.info("Cleaned up %d old usage records (older than 90 days)", deleted)
+
+
+async def _periodic_cleanup() -> None:
+    """Run cleanup tasks periodically."""
+    while True:
+        try:
+            await asyncio.sleep(6 * 60 * 60)  # 6 hours
+            await _cleanup_temp_skill_submissions()
+            await _refresh_container_tokens()
+            await _cleanup_old_usage_records()
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error("Error in periodic cleanup: %s", e)
 
 
 app = FastAPI(

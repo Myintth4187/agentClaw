@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import io
 import json
+import logging
 import os
 import re
+import shutil
 import tarfile
 import uuid
 import zipfile
@@ -14,7 +16,7 @@ from pathlib import Path
 from typing import Optional
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 from pydantic import BaseModel
 from sqlalchemy import select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,6 +26,8 @@ from app.config import settings
 from app.container.shared_manager import ensure_shared_container
 from app.db.engine import get_db
 from app.db.models import CuratedSkill, Notification, PlatformSkillVisibility, ReviewTask, SkillSubmission, User
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Schemas
@@ -798,6 +802,30 @@ async def admin_approve_submission(
         await db.flush()
         skill_id = skill.id
 
+    # Move skill files from temp directory to curated-skills
+    if sub.file_path:
+        temp_skill_dir = Path(sub.file_path)
+        if temp_skill_dir.exists():
+            dest_dir = _skill_dir(sub.skill_name)
+            try:
+                # Remove existing if any
+                if dest_dir.exists():
+                    shutil.rmtree(dest_dir)
+                # Copy temp files to curated-skills
+                shutil.copytree(temp_skill_dir, dest_dir)
+                # Clean up temp directory after successful copy
+                shutil.rmtree(temp_skill_dir)
+                # Clear file_path in database to indicate files are moved
+                sub.file_path = None
+                logger.info("[admin] Skill files moved from %s to %s", temp_skill_dir, dest_dir)
+            except Exception as e:
+                logger.error("[admin] Failed to move skill files: %s", e)
+                # Rollback transaction to maintain consistency
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to move skill files: {e}. Transaction rolled back."
+                )
+
     # Create notification for user (include AI review results)
     try:
         ai_result = json.loads(sub.ai_review_result) if sub.ai_review_result else {}
@@ -928,19 +956,22 @@ async def admin_update_platform_skill_visibility(
 
 @admin_router.post("/platform-skills/sync")
 async def admin_sync_platform_skills(
+    admin: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
-    """Sync platform skills from filesystem to database.
+    """Manually trigger platform skills sync from filesystem to database.
 
-    Scans the curated-skills directory for platform skills and creates
+    This is also automatically run on gateway startup.
+    Scans the platform-skills directory for platform skills and creates
     visibility records for any new skills found.
     """
-    curated_dir = Path(settings.curated_skills_dir)
-    if not curated_dir.exists():
+
+    platform_dir = Path(settings.platform_skills_dir)
+    if not platform_dir.exists():
         return {"ok": True, "added": 0}
 
     added = 0
-    for skill_dir in curated_dir.iterdir():
+    for skill_dir in platform_dir.iterdir():
         if not skill_dir.is_dir():
             continue
 

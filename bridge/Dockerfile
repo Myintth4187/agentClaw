@@ -26,7 +26,7 @@ RUN npm install --registry https://registry.npmmirror.com
 COPY tsconfig.json ./
 COPY *.ts ./
 COPY routes/ ./routes/
-RUN npx tsc
+RUN npx tsc --version && npx tsc
 
 # Copy platform built-in skills
 COPY skills/ ./skills/
