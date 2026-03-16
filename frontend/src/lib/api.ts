@@ -64,6 +64,7 @@ export interface AgentFileContent {
 
 export interface Session {
   key: string
+  agentId?: string
   title?: string
   created_at: string | null
   updated_at: string | null
@@ -314,9 +315,12 @@ export async function setAgentFile(
 // Session functions
 // ---------------------------------------------------------------------------
 
-export async function listSessions(agentId?: string): Promise<Session[]> {
-  const url = agentId
-    ? `/api/openclaw/sessions?agentId=${encodeURIComponent(agentId)}`
+export async function listSessions(agentId?: string, scope?: 'self' | 'all'): Promise<Session[]> {
+  const params = new URLSearchParams()
+  if (agentId) params.append('agentId', agentId)
+  if (scope) params.append('scope', scope)
+  const url = params.toString()
+    ? `/api/openclaw/sessions?${params.toString()}`
     : '/api/openclaw/sessions'
   return fetchJSON<Session[]>(url)
 }

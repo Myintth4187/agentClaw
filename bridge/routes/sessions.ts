@@ -32,13 +32,17 @@ export function sessionsRoutes(client: BridgeGatewayClient): Router {
     // Extract agentId from header for multi-agent routing
     const agentId = req.headers["x-agent-id"] as string | undefined;
     const isAdmin = req.headers["x-is-admin"] === "true";
+    // scope=self: only return current user's sessions (for chat sidebar)
+    const scope = req.query.scope as string | undefined;
     // Admin can specify which agent's sessions to view
-    // If no agentId specified, admin sees all sessions (for dashboard stats)
     let targetAgentId = agentId;
     if (isAdmin && req.query.agentId) {
       targetAgentId = req.query.agentId as string;
+    } else if (isAdmin && scope === "self") {
+      // Admin in chat mode: only see own sessions
+      targetAgentId = agentId;
     } else if (isAdmin && !req.query.agentId) {
-      // Admin without specific agentId: get all sessions by not passing agentId
+      // Admin without specific agentId and no scope: get all sessions
       targetAgentId = undefined;
     }
 
@@ -56,22 +60,17 @@ export function sessionsRoutes(client: BridgeGatewayClient): Router {
       const sessions = (result.sessions || []).map((s: OpenclawSessionRow) => {
         // Extract display-friendly session name from agent:{agentId}:{sessionKey}
         let displayTitle = s.derivedTitle || s.displayName;
-        if (!displayTitle) {
-          // Fallback: extract sessionKey part from agent:{agentId}:{sessionKey}
-          const keyStr = s.key;
-          if (keyStr.startsWith("agent:")) {
-            const parts = keyStr.split(":");
-            if (parts.length >= 3) {
-              displayTitle = parts.slice(2).join(":");
-            } else {
-              displayTitle = keyStr;
-            }
-          } else {
-            displayTitle = keyStr;
+        let sessionAgentId = "";
+        if (s.key.startsWith("agent:")) {
+          const parts = s.key.split(":");
+          if (parts.length >= 3) {
+            sessionAgentId = parts[1];
+            displayTitle = displayTitle || parts.slice(2).join(":");
           }
         }
         return {
           key: toFrameclawSessionId(s.key),
+          agentId: sessionAgentId,
           created_at: s.updatedAt ? new Date(s.updatedAt).toISOString() : null,
           updated_at: s.updatedAt ? new Date(s.updatedAt).toISOString() : null,
           title: displayTitle,

@@ -100,12 +100,22 @@ export default function Chat() {
     scrollToBottom()
   }, [messages, scrollToBottom])
 
-  // Load sessions
+  // Helper to get agent display name
+  const getAgentDisplayName = useCallback((agentId: string) => {
+    const agent = agents.find(a => a.id === agentId)
+    return agent?.displayName || agent?.identity?.name || agent?.name || agentId.slice(0, 8)
+  }, [agents])
+
+  // Load sessions (self only - for chat sidebar)
   const fetchSessions = useCallback(async () => {
     setSessionsLoading(true)
     try {
-      const result = await listSessions()
-      setSessions(result)
+      const [sessionsResult, agentsResult] = await Promise.all([
+        listSessions(undefined, 'self'),
+        listAgents('self')
+      ])
+      setSessions(sessionsResult)
+      setAgents(agentsResult.agents || [])
     } catch {
       setSessions([])
     } finally {
@@ -559,10 +569,10 @@ export default function Chat() {
                   <MessageSquare size={14} className="shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-medium truncate">
-                      {s.title || s.key}
+                      {s.agentId ? getAgentDisplayName(s.agentId) : '未知 Agent'}
                     </div>
-                    <div className="text-[10px] text-dark-text-secondary mt-0.5">
-                      {formatTime(s.updated_at)}
+                    <div className="text-[10px] text-dark-text-secondary truncate">
+                      {s.title || s.key.split(':').pop() || '新会话'}
                     </div>
                   </div>
                   <button
@@ -587,11 +597,7 @@ export default function Chat() {
               <div className="flex items-center gap-2 min-w-0">
                 <Bot size={16} className="text-accent-blue shrink-0" />
                 <span className="text-sm font-medium text-dark-text truncate">
-                  {getAgentIdFromKey(activeSessionKey)}
-                </span>
-                <ChevronRight size={12} className="text-dark-text-secondary shrink-0" />
-                <span className="text-xs text-dark-text-secondary truncate">
-                  {activeSessionKey.split(':').pop()}
+                  {getAgentDisplayName(getAgentIdFromKey(activeSessionKey))}
                 </span>
               </div>
               <button

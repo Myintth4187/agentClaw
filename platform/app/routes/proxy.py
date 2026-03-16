@@ -24,7 +24,9 @@ def _sign_is_admin(agent_id: str, is_admin: bool) -> str:
 
     Bridge will verify this signature to ensure isAdmin came from Platform Gateway.
     """
-    message = f"{agent_id}:{is_admin}:{settings.bridge_token}"
+    # Use lowercase string for consistent verification
+    admin_str = "true" if is_admin else "false"
+    message = f"{agent_id}:{admin_str}:{settings.bridge_token}"
     return hmac.new(
         settings.bridge_token.encode(),
         message.encode(),

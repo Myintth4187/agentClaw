@@ -74,6 +74,9 @@ export function agentsRoutes(client: BridgeGatewayClient, config: BridgeConfig):
     try {
       const result = await client.request<{ agents: Array<{ id: string; name?: string; identity?: { name?: string } }> }>("agents.list", {});
 
+      // Debug logging
+      console.log(`[agents] isAdmin=${isAdmin}, scope=${scope}, agentId=${agentId}`);
+
       // In multi-agent mode:
       // - Regular users only see their own agent
       // - Admins see ALL agents in admin dashboard, but only their own + system agents in chat
@@ -81,13 +84,15 @@ export function agentsRoutes(client: BridgeGatewayClient, config: BridgeConfig):
       const systemAgents = ["main", "skill-reviewer"];
 
       if (!isAdmin) {
-        // Non-admin: only see their own agent + system agents
-        agents = agents.filter((a) => a.id === agentId || systemAgents.includes(a.id));
+        // Non-admin: only see their own agent (no system agents)
+        agents = agents.filter((a) => a.id === agentId);
       } else if (scope === "self") {
         // Admin in chat mode: only see own agent + system agents
+        console.log(`[agents] Filtering to self only for admin`);
         agents = agents.filter((a) => a.id === agentId || systemAgents.includes(a.id));
       }
       // Admin with scope=all or no scope: see all agents (no filtering)
+      console.log(`[agents] Returning ${agents.length} agents`);
 
       // Enrich agents with display names for admin
       if (isAdmin && authHeader && config.proxyUrl) {
