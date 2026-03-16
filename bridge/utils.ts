@@ -41,6 +41,12 @@ export function toOpenclawSessionKey(sessionId: string, agentId?: string): strin
 
 /**
  * Convert openclaw session key back to frameclaw format.
+ *
+ * In multi-agent architecture, openclaw session keys have the format:
+ *   agent:<agentId>:<sessionKey>
+ *
+ * Note: This function returns the full key for API compatibility.
+ * Display formatting should be done on the frontend.
  */
 export function toFrameclawSessionId(openclawKey: string): string {
   return openclawKey;

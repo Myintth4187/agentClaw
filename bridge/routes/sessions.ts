@@ -39,12 +39,30 @@ export function sessionsRoutes(client: BridgeGatewayClient): Router {
         agentId, // Pass agentId to filter sessions for this agent
       });
 
-      const sessions = (result.sessions || []).map((s: OpenclawSessionRow) => ({
-        key: toFrameclawSessionId(s.key),
-        created_at: s.updatedAt ? new Date(s.updatedAt).toISOString() : null,
-        updated_at: s.updatedAt ? new Date(s.updatedAt).toISOString() : null,
-        title: s.derivedTitle || s.displayName || s.key,
-      }));
+      const sessions = (result.sessions || []).map((s: OpenclawSessionRow) => {
+        // Extract display-friendly session name from agent:{agentId}:{sessionKey}
+        let displayTitle = s.derivedTitle || s.displayName;
+        if (!displayTitle) {
+          // Fallback: extract sessionKey part from agent:{agentId}:{sessionKey}
+          const keyStr = s.key;
+          if (keyStr.startsWith("agent:")) {
+            const parts = keyStr.split(":");
+            if (parts.length >= 3) {
+              displayTitle = parts.slice(2).join(":");
+            } else {
+              displayTitle = keyStr;
+            }
+          } else {
+            displayTitle = keyStr;
+          }
+        }
+        return {
+          key: toFrameclawSessionId(s.key),
+          created_at: s.updatedAt ? new Date(s.updatedAt).toISOString() : null,
+          updated_at: s.updatedAt ? new Date(s.updatedAt).toISOString() : null,
+          title: displayTitle,
+        };
+      });
 
       res.json(sessions);
     } catch (err) {

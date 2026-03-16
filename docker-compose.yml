@@ -100,6 +100,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock  # Docker API access for container management
       - userdata:/data/openclaw-users
       - curated-skills:/app/curated-skills
+      - ./config:/app/config:ro  # Mount config directory for SOUL.md and other configs
     networks:
       - openclaw-internal   # talk to postgres + openclaw-shared
       - openclaw-external   # accept traffic from frontend / public

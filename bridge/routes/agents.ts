@@ -144,6 +144,14 @@ export function agentsRoutes(client: BridgeGatewayClient, config: BridgeConfig):
         console.error("Failed to create workspace directory:", err);
       }
 
+      // Create skills directory by default
+      try {
+        const agentSkillsDir = path.join(resolvedWorkspace, "skills");
+        fs.mkdirSync(agentSkillsDir, { recursive: true });
+      } catch (err) {
+        console.error("Failed to create skills directory:", err);
+      }
+
       // Install selected curated skills to agent's专属 directory
       if (installed_skills && Array.isArray(installed_skills) && installed_skills.length > 0) {
         // Fetch curated skills from platform to get skill names by ID
@@ -401,9 +409,18 @@ export function agentsRoutes(client: BridgeGatewayClient, config: BridgeConfig):
       const parentDir = path.dirname(absPath);
       fs.mkdirSync(parentDir, { recursive: true });
 
-      // Write file
+      // Write file to workspace
       fs.writeFileSync(absPath, content, "utf-8");
       const stat = fs.statSync(absPath);
+
+      // Special handling for SOUL.md: also write to agent config directory
+      // OpenClaw reads SOUL.md from ~/.openclaw/agents/<agentId>/SOUL.md
+      if (relPath === "SOUL.md") {
+        const agentConfigDir = path.join(baseDir, "agents", targetAgentId);
+        fs.mkdirSync(agentConfigDir, { recursive: true });
+        const agentSoulPath = path.join(agentConfigDir, "SOUL.md");
+        fs.writeFileSync(agentSoulPath, content, "utf-8");
+      }
 
       res.json({
         name: path.basename(absPath),

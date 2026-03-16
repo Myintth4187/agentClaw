@@ -40,7 +40,7 @@ function listAllAgentWorkspaces(baseDir: string): Array<{ id: string; path: stri
   // Add main workspace if exists
   const mainWorkspace = path.join(baseDir, "workspace");
   if (fs.existsSync(mainWorkspace)) {
-    workspaces.push({ id: "main", path: mainWorkspace });
+    workspaces.push({ id: "main", path: "/workspace" });
   }
 
   // Add all workspace-{agentId} directories
@@ -49,7 +49,7 @@ function listAllAgentWorkspaces(baseDir: string): Array<{ id: string; path: stri
     if (entry.isDirectory() && entry.name.startsWith("workspace-")) {
       const agentId = entry.name.substring("workspace-".length);
       if (agentId !== "main") {  // main is already added above
-        workspaces.push({ id: agentId, path: path.join(baseDir, entry.name) });
+        workspaces.push({ id: agentId, path: `/workspace-${agentId}` });
       }
     }
   }
@@ -177,7 +177,9 @@ export function filemanagerRoutes(config: BridgeConfig): Router {
       return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
     });
 
-    res.json({ type: "directory", path: relPath, root: rootDir, items });
+    // Return virtual root path instead of exposing the actual filesystem path
+    const virtualRoot = "/workspace";
+    res.json({ type: "directory", path: relPath || "/", root: virtualRoot, items });
   }));
 
   // GET /api/filemanager/download?path=&agentId= (admin can specify agentId)
