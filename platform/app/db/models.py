@@ -98,6 +98,20 @@ class CuratedSkill(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
+class PlatformSkillVisibility(Base):
+    """Platform skill visibility configuration - admin can control which platform skills are visible to users."""
+
+    __tablename__ = "platform_skill_visibility"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    skill_name: Mapped[str] = mapped_column(String(128), unique=True, nullable=False, index=True)
+    is_visible: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    category: Mapped[str] = mapped_column(String(64), nullable=False, default="general")
+    requirements: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
 class SkillSubmission(Base):
     """User-submitted skill for admin review."""
 

@@ -2,9 +2,11 @@
 
 把你的自定义技能放在这里，容器启动时会自动复制到全局 skills 目录，在**平台技能**板块中供所有用户使用。
 
+管理员可以在后台勾选控制哪些平台技能对用户可见。
+
 ## 当前技能列表
 
-本目录包含以下 Claude Code 官方开源技能：
+### Claude Code 官方开源技能
 
 | 技能 | 描述 |
 |------|------|
@@ -24,9 +26,24 @@
 | `brand-guidelines` | 品牌指南 |
 | `internal-comms` | 内部通讯 |
 | `doc-coauthoring` | 文档协作编写 |
-| `skill-creator` | 技能创建助手 |
 
 来源：[Claude Code Skills](https://github.com/anthropics/claude-code-skills)
+
+### OpenClaw 内置技能（容器适配版）
+
+| 技能 | 描述 | 需求 |
+|------|------|------|
+| `skill-creator` | 创建、编辑、审核 AgentSkills | 无 |
+| `github` | GitHub 操作（gh CLI） | gh |
+| `summarize` | 总结 URL/播客/文档 | 无 |
+| `weather` | 天气查询（via wttr.in） | curl |
+| `healthcheck` | 健康检查和安全审计 | 无 |
+| `model-usage` | 模型使用统计 | codexbar |
+| `tmux` | tmux 会话控制 | tmux |
+| `video-frames` | 视频帧提取 | ffmpeg |
+| `discord` | Discord 集成 | webhook |
+| `slack` | Slack 集成 | webhook |
+| `notion` | Notion 集成 | API token |
 
 ## 目录结构
 
