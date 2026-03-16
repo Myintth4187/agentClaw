@@ -56,6 +56,7 @@ services:
       - ${HOME}/.openclaw:${HOME}/.openclaw  # Same path on host and in container
       - /var/run/docker.sock:/var/run/docker.sock  # For sandbox containers
       - curated-skills:/app/curated-skills
+      - ./skills:/app/project-skills:ro  # Mount project skills directory
       - ./bridge/dist:/app/dist  # Mount local bridge code
     networks:
       - openclaw-internal

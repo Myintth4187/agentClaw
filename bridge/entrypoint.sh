@@ -14,9 +14,31 @@ if [ -d "$PLATFORM_SKILLS_DIR" ]; then
   echo "[entrypoint] Platform skills synced"
 fi
 
-# Copy skill-creator from openclaw builtin skills
+# Copy skills from project source directory (lowest priority, can be overridden by builtin)
+PROJECT_SKILLS_DIR="/app/project-skills"
+if [ -d "$PROJECT_SKILLS_DIR" ]; then
+  for skill_dir in "$PROJECT_SKILLS_DIR"/*/; do
+    if [ -d "$skill_dir" ]; then
+      skill_name=$(basename "$skill_dir")
+      # Skip skill-creator if exists (will be handled separately)
+      if [ "$skill_name" != "skill-creator" ]; then
+        cp -r "$skill_dir" ~/.openclaw/skills/
+        echo "[entrypoint] Project skill synced: $skill_name"
+      fi
+    fi
+  done
+fi
+
+# Copy skill-creator: prefer project version, fallback to builtin
 BUILTIN_SKILLS="$(npm root -g)/openclaw/skills"
-if [ -d "$BUILTIN_SKILLS/skill-creator" ]; then
+PROJECT_SKILL_CREATOR="$PROJECT_SKILLS_DIR/skill-creator"
+
+if [ -d "$PROJECT_SKILL_CREATOR" ]; then
+  # Use project custom skill-creator
+  cp -r "$PROJECT_SKILL_CREATOR" ~/.openclaw/skills/
+  echo "[entrypoint] skill-creator synced from project"
+elif [ -d "$BUILTIN_SKILLS/skill-creator" ]; then
+  # Fallback to openclaw builtin
   cp -r "$BUILTIN_SKILLS/skill-creator" ~/.openclaw/skills/
   echo "[entrypoint] skill-creator synced from builtin"
 fi
