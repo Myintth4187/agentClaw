@@ -324,18 +324,23 @@ Three types of skills:
 
 ## AgentClaw Agent Persona
 
-The SOUL.md template for regular users is defined in `platform/app/routes/auth.py` (`AGENTCLAW_SOUL_MD`).
+Agent 人格文件从 `config/` 目录加载（挂载到 gateway 容器 `/app/config`）：
+- `config/SOUL.md` — 身份与人格（必须）
+- `config/AGENTS.md` — 行为规范（可选，不存在则用 OpenClaw 默认）
 
-To update existing agents after changing SOUL.md:
+新用户注册时自动写入。如需同步到现有 Agent：
 ```bash
 python3 -c "
-import re, glob, os
-soul = open('platform/app/routes/auth.py').read()
-m = re.search(r\"AGENTCLAW_SOUL_MD = '''(.*?)'''\", soul, re.DOTALL)
-if m:
-    for ws in glob.glob(os.path.expanduser('~/.openclaw/workspace-*')):
-        with open(os.path.join(ws, 'SOUL.md'), 'w') as f: f.write(m.group(1))
-        print(f'Updated: {ws}')
+import glob, os
+for ws in glob.glob(os.path.expanduser('~/.openclaw/workspace-*')):
+    soul = open('config/SOUL.md').read()
+    with open(os.path.join(ws, 'SOUL.md'), 'w') as f: f.write(soul)
+    print(f'SOUL.md updated: {ws}')
+    agents_path = 'config/AGENTS.md'
+    if os.path.exists(agents_path):
+        agents = open(agents_path).read()
+        with open(os.path.join(ws, 'AGENTS.md'), 'w') as f: f.write(agents)
+        print(f'AGENTS.md updated: {ws}')
 "
 ```
 

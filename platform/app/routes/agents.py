@@ -11,6 +11,7 @@ from app.config import settings
 from app.container.shared_manager import ensure_shared_container
 from app.db.engine import get_db
 from app.db.models import User, UserAgent
+from app.personas import load_agents_md, load_soul_md
 
 router = APIRouter(prefix="/api/agents", tags=["agents"])
 
@@ -61,10 +62,11 @@ def _sanitize_agent_name(name: str) -> str:
 async def _create_agent_in_openclaw(
     openclaw_agent_id: str,
     name: str,
-    soul_md: str = "",
+    is_admin: bool = False,
 ) -> bool:
     """Create an agent in the shared OpenClaw instance.
 
+    Sets SOUL.md and AGENTS.md from platform config for non-admin agents.
     Returns True if successful.
     """
     if settings.dev_openclaw_url:
@@ -75,28 +77,35 @@ async def _create_agent_in_openclaw(
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            # Create the agent
             resp = await client.post(
                 f"{bridge_url}/api/agents",
-                json={
-                    "name": name,
-                    "agentId": openclaw_agent_id,
-                },
+                json={"name": name, "agentId": openclaw_agent_id},
                 headers={"X-Is-Admin": "true"},
             )
             if resp.status_code != 200:
                 print(f"[agents] Failed to create agent in OpenClaw: {resp.status_code} - {resp.text}")
                 return False
 
-            # Set SOUL.md if provided
-            if soul_md:
+            if not is_admin:
+                headers = {"X-Agent-Id": openclaw_agent_id, "X-Is-Admin": "true"}
+
                 soul_resp = await client.put(
                     f"{bridge_url}/api/agents/{openclaw_agent_id}/files/SOUL.md",
-                    json={"content": soul_md},
-                    headers={"X-Agent-Id": openclaw_agent_id, "X-Is-Admin": "true"},
+                    json={"content": load_soul_md()},
+                    headers=headers,
                 )
                 if soul_resp.status_code != 200:
                     print(f"[agents] Warning: Failed to set SOUL.md for agent {openclaw_agent_id}")
+
+                agents_md = load_agents_md()
+                if agents_md is not None:
+                    agents_resp = await client.put(
+                        f"{bridge_url}/api/agents/{openclaw_agent_id}/files/AGENTS.md",
+                        json={"content": agents_md},
+                        headers=headers,
+                    )
+                    if agents_resp.status_code != 200:
+                        print(f"[agents] Warning: Failed to set AGENTS.md for agent {openclaw_agent_id}")
 
             return True
     except Exception as e:
@@ -207,6 +216,7 @@ async def create_agent(
     created = await _create_agent_in_openclaw(
         openclaw_agent_id=openclaw_agent_id,
         name=req.name,
+        is_admin=(user.role == "admin"),
     )
     if not created:
         raise HTTPException(
