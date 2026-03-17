@@ -11,18 +11,21 @@ import {
   ToggleRight,
   X,
 } from 'lucide-react'
-import type { CronJob } from '../lib/api'
+import type { CronJob, UserAgentRecord } from '../lib/api'
 import {
   listCronJobs,
   createCronJob,
   deleteCronJob,
   toggleCronJob,
   runCronJob,
+  listMyAgents,
 } from '../lib/api'
 
 export default function CronJobs() {
   const [jobs, setJobs] = useState<CronJob[]>([])
   const [loading, setLoading] = useState(true)
+  const [agents, setAgents] = useState<UserAgentRecord[]>([])
+  const [selectedAgentId, setSelectedAgentId] = useState<string | undefined>(undefined)
   const [error, setError] = useState('')
   const [refreshing, setRefreshing] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
@@ -31,11 +34,13 @@ export default function CronJobs() {
   const [runningId, setRunningId] = useState<string | null>(null)
   const [togglingId, setTogglingId] = useState<string | null>(null)
 
-  const fetchJobs = useCallback(async (showLoader = false) => {
+  const selectedAgent = agents.find(a => a.openclaw_agent_id === selectedAgentId) || agents.find(a => a.is_default) || agents[0]
+
+  const fetchJobs = useCallback(async (showLoader = false, agentId?: string) => {
     if (showLoader) setLoading(true)
     setError('')
     try {
-      const result = await listCronJobs(true)
+      const result = await listCronJobs(true, agentId)
       setJobs(result)
     } catch (err: any) {
       setError(err?.message || '获取定时任务失败')
@@ -46,18 +51,32 @@ export default function CronJobs() {
   }, [])
 
   useEffect(() => {
-    fetchJobs(true)
+    listMyAgents().then(r => {
+      setAgents(r.agents)
+      const def = r.agents.find(a => a.is_default) || r.agents[0]
+      if (def) {
+        setSelectedAgentId(def.openclaw_agent_id)
+        fetchJobs(true, def.openclaw_agent_id)
+      } else {
+        fetchJobs(true)
+      }
+    }).catch(() => { fetchJobs(true) })
   }, [fetchJobs])
+
+  const handleAgentChange = (agentId: string) => {
+    setSelectedAgentId(agentId)
+    fetchJobs(true, agentId)
+  }
 
   const handleRefresh = () => {
     setRefreshing(true)
-    fetchJobs()
+    fetchJobs(false, selectedAgentId)
   }
 
   const handleToggle = async (job: CronJob) => {
     setTogglingId(job.id)
     try {
-      const updated = await toggleCronJob(job.id, !job.enabled)
+      const updated = await toggleCronJob(job.id, !job.enabled, selectedAgentId)
       setJobs((prev) => prev.map((j) => (j.id === job.id ? updated : j)))
     } catch (err: any) {
       setError(err?.message || '切换状态失败')
@@ -69,9 +88,8 @@ export default function CronJobs() {
   const handleRun = async (job: CronJob) => {
     setRunningId(job.id)
     try {
-      await runCronJob(job.id)
-      // Refresh to get updated last_run info
-      await fetchJobs()
+      await runCronJob(job.id, selectedAgentId)
+      await fetchJobs(false, selectedAgentId)
     } catch (err: any) {
       setError(err?.message || '执行失败')
     } finally {
@@ -83,7 +101,7 @@ export default function CronJobs() {
     if (!deleteTarget) return
     setDeleting(true)
     try {
-      await deleteCronJob(deleteTarget.id)
+      await deleteCronJob(deleteTarget.id, selectedAgentId)
       setJobs((prev) => prev.filter((j) => j.id !== deleteTarget.id))
       setDeleteTarget(null)
     } catch (err: any) {
@@ -112,7 +130,7 @@ export default function CronJobs() {
         <div>
           <h1 className="text-2xl font-bold text-text-primary">定时任务</h1>
           <p className="mt-1 text-sm text-text-secondary">
-            管理 Agent 的定时执行任务
+            Agent 的定时执行任务（包含 Agent 自己创建的任务）
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -133,6 +151,35 @@ export default function CronJobs() {
           </button>
         </div>
       </div>
+
+      {/* Agent selector (shown when user has multiple agents) */}
+      {agents.length > 1 && (
+        <div className="mb-4 flex items-center gap-2">
+          <span className="text-xs text-text-secondary">查看 Agent：</span>
+          <div className="flex gap-1.5 flex-wrap">
+            {agents.map(a => (
+              <button
+                key={a.openclaw_agent_id}
+                onClick={() => handleAgentChange(a.openclaw_agent_id)}
+                className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
+                  selectedAgentId === a.openclaw_agent_id
+                    ? 'bg-accent-blue text-white'
+                    : 'border border-border-default text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                {a.name}
+                {a.is_default && <span className="ml-1 opacity-60">（默认）</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {agents.length === 1 && selectedAgent && (
+        <div className="mb-4 text-xs text-text-secondary">
+          当前 Agent：<span className="font-medium text-text-primary">{selectedAgent.name}</span>
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 rounded-lg bg-accent-red/10 p-3 text-sm text-accent-red flex items-center gap-2">
@@ -257,6 +304,8 @@ export default function CronJobs() {
       {/* Create modal */}
       {showCreate && (
         <CreateCronModal
+          agentId={selectedAgentId}
+          agentName={selectedAgent?.name}
           onCreated={handleCreated}
           onClose={() => setShowCreate(false)}
         />
@@ -297,9 +346,13 @@ export default function CronJobs() {
 type ScheduleType = 'every' | 'cron' | 'once'
 
 function CreateCronModal({
+  agentId,
+  agentName,
   onCreated,
   onClose,
 }: {
+  agentId?: string
+  agentName?: string
   onCreated: (job: CronJob) => void
   onClose: () => void
 }) {
@@ -309,9 +362,6 @@ function CreateCronModal({
   const [everySeconds, setEverySeconds] = useState('3600')
   const [cronExpr, setCronExpr] = useState('')
   const [atIso, setAtIso] = useState('')
-  const [deliver, setDeliver] = useState(false)
-  const [channel, setChannel] = useState('')
-  const [to, setTo] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -357,13 +407,7 @@ function CreateCronModal({
         params.at_iso = new Date(atIso).toISOString()
       }
 
-      if (deliver) {
-        params.deliver = true
-        if (channel.trim()) params.channel = channel.trim()
-        if (to.trim()) params.to = to.trim()
-      }
-
-      const job = await createCronJob(params)
+      const job = await createCronJob(params, agentId)
       onCreated(job)
     } catch (err: any) {
       setError(err?.message || '创建失败')
@@ -377,7 +421,9 @@ function CreateCronModal({
       <div className="rounded-xl bg-bg-surface border border-border-default max-w-lg w-full mx-4 shadow-xl max-h-[85vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border-default shrink-0">
-          <h3 className="text-base font-semibold text-text-primary">新建定时任务</h3>
+          <h3 className="text-base font-semibold text-text-primary">
+            新建定时任务{agentName ? <span className="ml-1.5 text-sm font-normal text-text-secondary">→ {agentName}</span> : ''}
+          </h3>
           <button
             onClick={onClose}
             className="rounded-lg p-1 text-text-secondary hover:text-text-primary transition-colors"
@@ -422,7 +468,7 @@ function CreateCronModal({
               className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary resize-none"
             />
             <p className="mt-0.5 text-[11px] text-text-secondary">
-              定时触发时，此消息将作为用户输入发送给 Agent
+              定时触发时，此消息将作为用户输入发送给默认 Agent
             </p>
           </div>
 
@@ -504,50 +550,6 @@ function CreateCronModal({
             </div>
           )}
 
-          {/* Deliver option */}
-          <div className="border-t border-border-default pt-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={deliver}
-                onChange={(e) => setDeliver(e.target.checked)}
-                className="rounded border-border-default"
-              />
-              <span className="text-sm text-text-primary">发送到渠道</span>
-            </label>
-            <p className="mt-0.5 ml-5 text-[11px] text-text-secondary">
-              勾选后，Agent 的回复将发送到指定渠道
-            </p>
-          </div>
-
-          {deliver && (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-text-secondary mb-1">
-                  渠道
-                </label>
-                <input
-                  type="text"
-                  value={channel}
-                  onChange={(e) => setChannel(e.target.value)}
-                  placeholder="telegram, discord..."
-                  className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-text-secondary mb-1">
-                  发送目标
-                </label>
-                <input
-                  type="text"
-                  value={to}
-                  onChange={(e) => setTo(e.target.value)}
-                  placeholder="用户ID或群组ID"
-                  className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary"
-                />
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Footer */}

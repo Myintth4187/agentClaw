@@ -15,6 +15,7 @@
   --color-bg-surface: #f1f5f9;
   --color-bg-floating: #e2e8f0;
   --color-bg-overlay: rgba(0, 0, 0, 0.4);
+  --color-bg-code: #dde3ed;
 
   /* Text Scale - Light */
   --color-text-primary: #0f172a;
@@ -64,6 +65,7 @@
   --color-bg-surface: #1a2235;
   --color-bg-floating: #242b3d;
   --color-bg-overlay: rgba(0, 0, 0, 0.6);
+  --color-bg-code: #0d1321;
 
   /* Text Scale - Dark */
   --color-text-primary: #f8fafc;
@@ -91,6 +93,7 @@
   --color-bg-surface: var(--color-bg-surface);
   --color-bg-floating: var(--color-bg-floating);
   --color-bg-overlay: var(--color-bg-overlay);
+  --color-bg-code: var(--color-bg-code);
 
   --color-text-primary: var(--color-text-primary);
   --color-text-secondary: var(--color-text-secondary);

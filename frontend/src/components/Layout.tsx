@@ -26,6 +26,7 @@ export function useChat() {
 
 export default function Layout() {
   const [chatTarget, setChatTarget] = useState<ChatTarget | null>(null)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const openChat = useCallback((target: ChatTarget) => {
     // Toggle if same agent
@@ -41,7 +42,7 @@ export default function Layout() {
   return (
     <ChatContext.Provider value={{ openChat, closeChat }}>
       <div className="flex h-screen overflow-hidden bg-bg-base">
-        <Sidebar />
+        <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(v => !v)} />
         <div className="flex flex-1 flex-col overflow-hidden">
           <TopBar />
           <main className="flex-1 overflow-y-auto p-6">

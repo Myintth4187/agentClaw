@@ -69,7 +69,7 @@ ADMIN_ONLY_PATHS = [
     "channels",       # Channel management
     "models/config",  # Model configuration
     "nodes",          # Node management
-    "cron",           # Cron jobs
+    # "cron" intentionally NOT here — bridge isolates by X-Agent-Id, open to all users
 ]
 
 
@@ -103,14 +103,32 @@ async def proxy_http(
                     detail="Admin access required",
                 )
 
-    # Get user's default agent for routing
-    user_agent = await _get_default_agent(db, user.id)
-    if user_agent is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No default agent found. Please create an agent first.",
+    # For non-admin users accessing agent-specific paths (/agents/{agentId}/...),
+    # verify the agentId belongs to the user and use it directly as X-Agent-Id.
+    import re as _re
+    agent_path_match = _re.match(r'^agents/([^/]+)/', path) if user.role != "admin" else None
+    if agent_path_match:
+        target_agent_id = agent_path_match.group(1)
+        result = await db.execute(
+            select(UserAgent).where(
+                UserAgent.openclaw_agent_id == target_agent_id,
+                UserAgent.user_id == user.id,
+                UserAgent.status == "active",
+            )
         )
-    agent_id = user_agent.openclaw_agent_id
+        owned = result.scalar_one_or_none()
+        if owned is None:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+        agent_id = target_agent_id
+    else:
+        # Default: use user's default agent for routing
+        user_agent = await _get_default_agent(db, user.id)
+        if user_agent is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No default agent found. Please create an agent first.",
+            )
+        agent_id = user_agent.openclaw_agent_id
 
     base_url = await _shared_instance_url()
     # Close the session explicitly so the connection returns to the pool

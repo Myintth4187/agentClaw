@@ -13,7 +13,10 @@ import {
   Paperclip,
   X,
   FileText,
+  Wrench,
 } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import {
   listSessions,
   getSession,
@@ -83,6 +86,12 @@ export default function Chat() {
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Tool call status
+  const [toolStatuses, setToolStatuses] = useState<{ name: string; done: boolean }[]>([])
+
+  // Agent filter
+  const [filterAgentId, setFilterAgentId] = useState<string>('')
+
   // New session
   const [showNewSession, setShowNewSession] = useState(false)
   const [agents, setAgents] = useState<AgentInfo[]>([])
@@ -115,7 +124,13 @@ export default function Chat() {
         listSessions(undefined, AgentScope.Self),
         listAgents(AgentScope.Self)
       ])
-      setSessions(sessionsResult)
+      // Sort newest first by updated_at, fall back to created_at
+      const sorted = [...sessionsResult].sort((a, b) => {
+        const at = a.updated_at || a.created_at || ''
+        const bt = b.updated_at || b.created_at || ''
+        return bt.localeCompare(at)
+      })
+      setSessions(sorted)
       setAgents(agentsResult.agents || [])
     } catch {
       setSessions([])
@@ -128,13 +143,20 @@ export default function Chat() {
     fetchSessions()
   }, [fetchSessions])
 
-  // Restore session from URL param
+  // Restore session from URL param, or auto-select most recent
   useEffect(() => {
     const sessionKey = searchParams.get('session')
     if (sessionKey && sessionKey !== activeSessionKey) {
       loadSession(sessionKey)
     }
   }, [searchParams])
+
+  // Auto-select most recent session when sessions load and no active session
+  useEffect(() => {
+    if (!sessionsLoading && sessions.length > 0 && !activeSessionKey && !searchParams.get('session')) {
+      loadSession(sessions[0].key)
+    }
+  }, [sessionsLoading, sessions]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadSession = async (key: string) => {
     setActiveSessionKey(key)
@@ -306,6 +328,7 @@ export default function Chat() {
       setError(err?.message || '发送失败')
     } finally {
       setSending(false)
+      setToolStatuses([])
     }
   }
 
@@ -365,6 +388,20 @@ export default function Chat() {
           return
         }
 
+        // Tool use events
+        if (msg.type === 'event' && msg.payload) {
+          if (msg.event === 'tool.use.start') {
+            const toolName = msg.payload.tool || msg.payload.name || 'tool'
+            setToolStatuses(prev => [...prev.filter(t => t.name !== toolName), { name: toolName, done: false }])
+          } else if (msg.event === 'tool.use.end') {
+            const toolName = msg.payload.tool || msg.payload.name || 'tool'
+            setToolStatuses(prev => prev.map(t => t.name === toolName ? { ...t, done: true } : t))
+            setTimeout(() => {
+              setToolStatuses(prev => prev.filter(t => !(t.name === toolName && t.done)))
+            }, 2000)
+          }
+        }
+
         // Chat event — agent turn completion signal
         // Agent may have multiple turns (tool call → response → tool call → response),
         // each producing a "final" event. Use debounce: refresh messages on every "final",
@@ -383,6 +420,7 @@ export default function Chat() {
                 // Refresh messages immediately (show latest replies in real-time)
                 getSession(currentKey).then(detail => {
                   setMessages(detail.messages || [])
+                  setToolStatuses([])
                 }).catch(() => {})
 
                 // Debounce: reset the completion timer on every "final"
@@ -548,6 +586,32 @@ export default function Chat() {
           </button>
         </div>
 
+        {/* Agent filter pills (only shown when >1 agent) */}
+        {agents.length > 1 && (
+          <div className="px-3 py-2 border-b border-border-default flex gap-1 flex-wrap">
+            <button
+              onClick={() => setFilterAgentId('')}
+              className={`rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                !filterAgentId ? 'bg-accent-blue text-white' : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              全部
+            </button>
+            {agents.map(a => (
+              <button
+                key={a.id}
+                onClick={() => setFilterAgentId(a.id)}
+                className={`rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors truncate max-w-[100px] ${
+                  filterAgentId === a.id ? 'bg-accent-blue text-white' : 'text-text-secondary hover:text-text-primary'
+                }`}
+                title={a.displayName || a.identity?.name || a.name || a.id}
+              >
+                {a.displayName || a.identity?.name || a.name || a.id.slice(0, 8)}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="flex-1 overflow-y-auto">
           {sessionsLoading ? (
             <div className="flex items-center justify-center py-8">
@@ -559,7 +623,7 @@ export default function Chat() {
             </div>
           ) : (
             <div className="py-1">
-              {sessions.map(s => (
+              {sessions.filter(s => !filterAgentId || getAgentIdFromKey(s.key) === filterAgentId).map(s => (
                 <button
                   key={s.key}
                   onClick={() => loadSession(s.key)}
@@ -643,9 +707,13 @@ export default function Chat() {
                             : 'bg-bg-surface border border-border-default text-text-primary'
                         }`}
                       >
-                        <div className="text-sm whitespace-pre-wrap break-words">
-                          {msg.content}
-                        </div>
+                        {msg.role === 'user' ? (
+                          <div className="text-sm whitespace-pre-wrap break-words">{msg.content}</div>
+                        ) : (
+                          <div className="text-sm prose prose-sm max-w-none dark:prose-invert text-text-primary [&_pre]:bg-bg-code [&_pre]:rounded [&_pre]:p-2 [&_pre]:overflow-x-auto [&_code]:text-accent-blue [&_code]:bg-bg-code [&_code]:rounded [&_code]:px-1 [&_a]:text-accent-blue [&_ul]:list-disc [&_ol]:list-decimal [&_li]:ml-4">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                          </div>
+                        )}
                         {msg.timestamp && (
                           <div className={`text-[10px] mt-1 ${
                             msg.role === 'user' ? 'text-white/60' : 'text-text-secondary'
@@ -661,7 +729,24 @@ export default function Chat() {
                       )}
                     </div>
                   ))}
-                  {sending && (
+                  {/* Tool call status rows */}
+                  {toolStatuses.map((t, i) => (
+                    <div key={`tool-${i}`} className="flex gap-3">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-yellow/10 mt-0.5">
+                        <Wrench size={14} className="text-accent-yellow" />
+                      </div>
+                      <div className="rounded-xl bg-bg-surface border border-border-default px-4 py-2 text-xs text-text-secondary flex items-center gap-2">
+                        {t.done ? (
+                          <span className="text-accent-green">✓</span>
+                        ) : (
+                          <Loader2 size={10} className="animate-spin text-accent-yellow" />
+                        )}
+                        <span>{t.done ? `已完成: ${t.name}` : `正在调用: ${t.name}...`}</span>
+                      </div>
+                    </div>
+                  ))}
+
+                  {sending && toolStatuses.length === 0 && (
                     <div className="flex gap-3">
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-blue/10 text-accent-blue mt-0.5">
                         <Bot size={14} />

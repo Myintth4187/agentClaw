@@ -45,8 +45,7 @@ class AgentListResponse(BaseModel):
 # Constants
 # -----------------------------------------------------------------------------
 
-# Regular users can only create 1 agent, admins can create unlimited
-MAX_AGENTS_PER_USER = 1
+# Agent limit for regular users is configured in settings.max_agents_per_user
 
 
 # -----------------------------------------------------------------------------
@@ -63,6 +62,7 @@ async def _create_agent_in_openclaw(
     openclaw_agent_id: str,
     name: str,
     is_admin: bool = False,
+    set_soul: bool = True,
 ) -> bool:
     """Create an agent in the shared OpenClaw instance.
 
@@ -86,7 +86,7 @@ async def _create_agent_in_openclaw(
                 print(f"[agents] Failed to create agent in OpenClaw: {resp.status_code} - {resp.text}")
                 return False
 
-            if not is_admin:
+            if not is_admin and set_soul:
                 headers = {"X-Agent-Id": openclaw_agent_id, "X-Is-Admin": "true"}
 
                 soul_resp = await client.put(
@@ -152,7 +152,7 @@ async def list_agents(
     )
     agents = result.scalars().all()
 
-    max_allowed = float('inf') if user.role == "admin" else MAX_AGENTS_PER_USER
+    max_allowed = float('inf') if user.role == "admin" else settings.max_agents_per_user
 
     return AgentListResponse(
         agents=[
@@ -191,10 +191,10 @@ async def create_agent(
             )
         )
         current_count = result.scalar_one()
-        if current_count >= MAX_AGENTS_PER_USER:
+        if current_count >= settings.max_agents_per_user:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"You can only have {MAX_AGENTS_PER_USER} active agent(s). Please delete an existing agent first.",
+                detail=f"You can only have {settings.max_agents_per_user} active agent(s). Please delete an existing agent first.",
             )
 
     # Generate openclaw agent id: user_id + random suffix to ensure uniqueness
@@ -212,11 +212,12 @@ async def create_agent(
     )
     is_first = result.scalar_one() == 0
 
-    # Create agent in OpenClaw first
+    # Create agent in OpenClaw first (manual creates don't get SkillClaw soul)
     created = await _create_agent_in_openclaw(
         openclaw_agent_id=openclaw_agent_id,
         name=req.name,
         is_admin=(user.role == "admin"),
+        set_soul=False,
     )
     if not created:
         raise HTTPException(

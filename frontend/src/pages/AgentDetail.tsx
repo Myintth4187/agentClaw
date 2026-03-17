@@ -8,15 +8,26 @@ import {
   Eye,
   EyeOff,
   Wrench,
+  Edit2,
+  Save,
+  X,
+  ToggleLeft,
+  ToggleRight,
 } from 'lucide-react'
 import { fetchAgentDetail, fetchAgents } from '../store/agents'
-import { getAgentFile, listSkillsForAgent, toggleAgentSkill, type Skill } from '../lib/api'
+import { getAgentFile, setAgentFile, listSkillsForAgent, toggleAgentSkill, getMe, listMyAgents, type Skill } from '../lib/api'
 import type { BackendAgent, AgentFile } from '../types/agent'
 
 interface AgentDetailData {
   agentId: string
   workspace: string
   files: AgentFile[]
+}
+
+// Editable file extensions
+const EDITABLE_EXTENSIONS = ['.md', '.txt', '.json', '.yaml', '.yml', '.toml', '.sh', '.py', '.js', '.ts']
+function isEditable(fileName: string): boolean {
+  return EDITABLE_EXTENSIONS.some(ext => fileName.toLowerCase().endsWith(ext))
 }
 
 export default function AgentDetail() {
@@ -28,6 +39,11 @@ export default function AgentDetail() {
   const [expandedFiles, setExpandedFiles] = useState<Record<string, string | null>>({})
   const [loadingFiles, setLoadingFiles] = useState<Record<string, boolean>>({})
 
+  // Edit state per file
+  const [editingFile, setEditingFile] = useState<string | null>(null)
+  const [editContent, setEditContent] = useState<string>('')
+  const [savingFile, setSavingFile] = useState<string | null>(null)
+
   // Skills state
   const [skills, setSkills] = useState<Skill[]>([])
   const [loadingSkills, setLoadingSkills] = useState(true)
@@ -35,21 +51,42 @@ export default function AgentDetail() {
 
   useEffect(() => {
     if (!id) return
-    Promise.all([
-      fetchAgentDetail(id),
-      fetchAgents(),
-      listSkillsForAgent(id),
-    ]).then(([d, agents, skillList]) => {
-      setDetail(d as AgentDetailData)
-      const found = agents.find((a: BackendAgent) => a.id === id)
-      setAgentInfo(found || null)
-      setSkills(skillList)
-    }).catch(() => {
-      // Ignore skills errors
-    }).finally(() => {
+
+    const load = async () => {
+      // Load agent name/info: try platform API first (works for all users), fall back to bridge
+      try {
+        const me = await getMe().catch(() => null)
+        if (me?.role === 'admin') {
+          const agents = await fetchAgents()
+          const found = agents.find((a: BackendAgent) => a.id === id)
+          setAgentInfo(found || null)
+        } else {
+          const result = await listMyAgents()
+          const found = result.agents.find(a => a.openclaw_agent_id === id)
+          if (found) {
+            setAgentInfo({ id: found.openclaw_agent_id, name: found.name } as BackendAgent)
+          }
+        }
+      } catch { /* ignore */ }
+
+      // Load workspace files
+      try {
+        const d = await fetchAgentDetail(id)
+        setDetail(d as AgentDetailData)
+      } catch { /* ignore */ }
+
+      // Load skills
+      try {
+        const skillList = await listSkillsForAgent(id)
+        setSkills(skillList)
+      } catch { /* ignore */ } finally {
+        setLoadingSkills(false)
+      }
+
       setLoading(false)
-      setLoadingSkills(false)
-    })
+    }
+
+    load()
   }, [id])
 
   const toggleFile = async (fileName: string) => {
@@ -59,6 +96,8 @@ export default function AgentDetail() {
         delete next[fileName]
         return next
       })
+      // Also exit edit mode if leaving
+      if (editingFile === fileName) setEditingFile(null)
       return
     }
 
@@ -66,11 +105,36 @@ export default function AgentDetail() {
     setLoadingFiles(prev => ({ ...prev, [fileName]: true }))
     try {
       const result = await getAgentFile(id, fileName)
-      setExpandedFiles(prev => ({ ...prev, [fileName]: result?.file?.content ?? '' }))
+      setExpandedFiles(prev => ({ ...prev, [fileName]: result?.content ?? '' }))
     } catch {
       setExpandedFiles(prev => ({ ...prev, [fileName]: '(无法加载文件内容)' }))
     } finally {
       setLoadingFiles(prev => ({ ...prev, [fileName]: false }))
+    }
+  }
+
+  const startEdit = (fileName: string) => {
+    setEditContent(expandedFiles[fileName] ?? '')
+    setEditingFile(fileName)
+  }
+
+  const cancelEdit = () => {
+    setEditingFile(null)
+    setEditContent('')
+  }
+
+  const saveEdit = async (fileName: string) => {
+    if (!id) return
+    setSavingFile(fileName)
+    try {
+      await setAgentFile(id, fileName, editContent)
+      setExpandedFiles(prev => ({ ...prev, [fileName]: editContent }))
+      setEditingFile(null)
+      setEditContent('')
+    } catch (err: any) {
+      alert(`保存失败: ${err?.message || '未知错误'}`)
+    } finally {
+      setSavingFile(null)
     }
   }
 
@@ -87,7 +151,6 @@ export default function AgentDetail() {
       )
     } catch (err) {
       console.error('Failed to toggle skill:', err)
-      // Refresh skills on error
       const refreshed = await listSkillsForAgent(id)
       setSkills(refreshed)
     } finally {
@@ -161,7 +224,7 @@ export default function AgentDetail() {
 
       {/* Files */}
       {detail?.files && detail.files.length > 0 && (
-        <div className="rounded-xl border border-border-default bg-bg-surface p-4">
+        <div className="mb-6 rounded-xl border border-border-default bg-bg-surface p-4">
           <div className="flex items-center gap-2 mb-3">
             <FileText size={16} className="text-text-secondary" />
             <span className="text-sm font-medium text-text-primary">配置文件</span>
@@ -170,6 +233,9 @@ export default function AgentDetail() {
             {detail.files.map(file => {
               const isExpanded = file.name in expandedFiles
               const isLoading = loadingFiles[file.name]
+              const isCurrentlyEditing = editingFile === file.name
+              const isSaving = savingFile === file.name
+              const canEdit = isEditable(file.name) && !file.missing
               return (
                 <div key={file.name}>
                   <div className="flex items-center justify-between rounded-lg bg-bg-base px-4 py-2">
@@ -181,32 +247,74 @@ export default function AgentDetail() {
                         {file.missing ? '缺失' : formatSize(file.size)}
                       </span>
                       {!file.missing && (
-                        <button
-                          onClick={() => toggleFile(file.name)}
-                          disabled={isLoading}
-                          className="flex items-center gap-1 text-xs text-accent-blue/70 hover:text-accent-blue disabled:opacity-50 transition-colors"
-                        >
-                          {isLoading ? (
-                            <Loader2 size={13} className="animate-spin" />
-                          ) : isExpanded ? (
-                            <>
-                              <EyeOff size={13} />
-                              收起
-                            </>
-                          ) : (
-                            <>
-                              <Eye size={13} />
-                              查看
-                            </>
+                        <>
+                          {isExpanded && canEdit && !isCurrentlyEditing && (
+                            <button
+                              onClick={() => startEdit(file.name)}
+                              className="flex items-center gap-1 text-xs text-accent-blue/70 hover:text-accent-blue transition-colors"
+                            >
+                              <Edit2 size={12} />
+                              编辑
+                            </button>
                           )}
-                        </button>
+                          <button
+                            onClick={() => toggleFile(file.name)}
+                            disabled={isLoading}
+                            className="flex items-center gap-1 text-xs text-accent-blue/70 hover:text-accent-blue disabled:opacity-50 transition-colors"
+                          >
+                            {isLoading ? (
+                              <Loader2 size={13} className="animate-spin" />
+                            ) : isExpanded ? (
+                              <>
+                                <EyeOff size={13} />
+                                收起
+                              </>
+                            ) : (
+                              <>
+                                <Eye size={13} />
+                                查看
+                              </>
+                            )}
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>
                   {isExpanded && expandedFiles[file.name] !== null && (
-                    <pre className="mt-1 mb-1 mx-1 whitespace-pre-wrap rounded-lg bg-bg-base/60 border border-border-default p-4 text-sm text-text-primary leading-relaxed font-mono max-h-96 overflow-y-auto">
-                      {expandedFiles[file.name]}
-                    </pre>
+                    <div className="mt-1 mb-1 mx-1">
+                      {isCurrentlyEditing ? (
+                        <div className="space-y-2">
+                          <textarea
+                            value={editContent}
+                            onChange={e => setEditContent(e.target.value)}
+                            rows={Math.max(8, (editContent.match(/\n/g)?.length ?? 0) + 2)}
+                            className="w-full rounded-lg bg-bg-base/60 border border-accent-blue/40 p-4 text-sm text-text-primary font-mono resize-y outline-none focus:border-accent-blue"
+                          />
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => saveEdit(file.name)}
+                              disabled={isSaving}
+                              className="flex items-center gap-1 rounded bg-accent-green/20 px-3 py-1.5 text-xs font-medium text-accent-green hover:bg-accent-green/30 disabled:opacity-50"
+                            >
+                              {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+                              保存
+                            </button>
+                            <button
+                              onClick={cancelEdit}
+                              disabled={isSaving}
+                              className="flex items-center gap-1 rounded bg-bg-surface px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary"
+                            >
+                              <X size={12} />
+                              取消
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <pre className="whitespace-pre-wrap rounded-lg bg-bg-base/60 border border-border-default p-4 text-sm text-text-primary leading-relaxed font-mono max-h-96 overflow-y-auto">
+                          {expandedFiles[file.name]}
+                        </pre>
+                      )}
+                    </div>
                   )}
                 </div>
               )
@@ -239,26 +347,20 @@ export default function AgentDetail() {
                 </div>
                 <button
                   onClick={() => handleToggleSkill(skill)}
-                  disabled={togglingSkill === skill.name}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    skill.disabled
-                      ? 'bg-bg-surface border border-border-default text-text-secondary hover:text-text-primary'
-                      : 'bg-accent-blue/20 text-accent-blue hover:bg-accent-blue/30'
-                  }`}
+                  disabled={!!togglingSkill}
+                  className="flex items-center gap-1.5 disabled:opacity-50 transition-opacity"
+                  title={skill.disabled ? '点击启用' : '点击禁用'}
                 >
                   {togglingSkill === skill.name ? (
-                    <Loader2 size={12} className="animate-spin" />
+                    <Loader2 size={20} className="animate-spin text-text-secondary" />
                   ) : skill.disabled ? (
-                    <>
-                      <EyeOff size={12} />
-                      禁用
-                    </>
+                    <ToggleLeft size={24} className="text-text-secondary" />
                   ) : (
-                    <>
-                      <Eye size={12} />
-                      启用
-                    </>
+                    <ToggleRight size={24} className="text-accent-green" />
                   )}
+                  <span className={`text-xs ${skill.disabled ? 'text-text-secondary' : 'text-accent-green'}`}>
+                    {skill.disabled ? '已禁用' : '已启用'}
+                  </span>
                 </button>
               </div>
             ))}

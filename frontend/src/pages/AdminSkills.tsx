@@ -4,6 +4,7 @@ import {
   adminDeleteCuratedSkill, adminListSubmissions, adminApproveSubmission,
   adminRejectSubmission, adminGetSubmissionContent, adminListPlatformSkills,
   adminUpdatePlatformSkillVisibility, adminSyncPlatformSkills,
+  adminTestInstallSubmission, adminMarkSubmissionFeatured,
 } from '../lib/api'
 import type { CuratedSkill, SkillSubmission, AdminPlatformSkill } from '../lib/api'
 import {
@@ -53,6 +54,8 @@ export default function AdminSkills() {
   const [expandedSub, setExpandedSub] = useState<string | null>(null)
   const [skillContent, setSkillContent] = useState<Record<string, string>>({})
   const [loadingContent, setLoadingContent] = useState<string | null>(null)
+  const [testInstalling, setTestInstalling] = useState<string | null>(null)
+  const [markingFeatured, setMarkingFeatured] = useState<string | null>(null)
 
   const refreshSkills = () => {
     adminListCuratedSkills().then(setSkills).catch(() => setSkills([])).finally(() => setLoading(false))
@@ -193,6 +196,31 @@ export default function AdminSkills() {
       // ignore
     } finally {
       setReviewing(null)
+    }
+  }
+
+  const handleTestInstall = async (id: string) => {
+    setTestInstalling(id)
+    try {
+      await adminTestInstallSubmission(id)
+      alert('测试安装成功！技能已安装到您的 Agent。')
+    } catch (err: any) {
+      alert(`测试安装失败: ${err?.message || '未知错误'}`)
+    } finally {
+      setTestInstalling(null)
+    }
+  }
+
+  const handleMarkFeatured = async (id: string) => {
+    setMarkingFeatured(id)
+    try {
+      const res = await adminMarkSubmissionFeatured(id)
+      refreshSkills()
+      alert(res.is_featured ? `技能 "${res.skill_name}" 已标记为精选` : `技能 "${res.skill_name}" 已取消精选`)
+    } catch (err: any) {
+      alert(`操作失败: ${err?.message || '未知错误'}`)
+    } finally {
+      setMarkingFeatured(null)
     }
   }
 
@@ -472,7 +500,7 @@ export default function AdminSkills() {
                       ) : (
                         <EyeOff size={12} />
                       )}
-                      {skill.is_visible ? '可见' : '隐藏'}
+                      {skill.is_visible ? null : '隐藏'}
                     </button>
                   </div>
                 )
@@ -628,30 +656,55 @@ export default function AdminSkills() {
                         )}
 
                         {/* Actions */}
-                        {sub.status !== 'approved' && sub.status !== 'rejected' && (
-                          <div className="flex items-center gap-2 pt-1 border-t border-border-default">
-                            <input
-                              type="text"
-                              placeholder="审核备注（可选）"
-                              value={reviewing === sub.id ? reviewNotes : ''}
-                              onChange={e => { setReviewing(sub.id); setReviewNotes(e.target.value) }}
-                              onFocus={() => setReviewing(sub.id)}
-                              className="flex-1 rounded border border-border-default bg-bg-base px-2 py-1.5 text-xs text-text-primary outline-none focus:border-accent-blue"
-                            />
+                        <div className="flex flex-col gap-2 pt-1 border-t border-border-default">
+                          {/* Test install (always available if file exists) */}
+                          <div className="flex items-center gap-2">
                             <button
-                              onClick={() => handleApprove(sub.id)}
-                              className="flex items-center gap-1 rounded bg-accent-green/20 px-3 py-1.5 text-xs font-medium text-accent-green hover:bg-accent-green/30"
+                              onClick={() => handleTestInstall(sub.id)}
+                              disabled={testInstalling === sub.id}
+                              className="flex items-center gap-1 rounded bg-accent-blue/10 px-3 py-1.5 text-xs font-medium text-accent-blue hover:bg-accent-blue/20 disabled:opacity-50"
                             >
-                              <Check size={12} /> 通过
+                              {testInstalling === sub.id ? <Loader2 size={12} className="animate-spin" /> : <Package size={12} />}
+                              测试安装
                             </button>
-                            <button
-                              onClick={() => handleReject(sub.id)}
-                              className="flex items-center gap-1 rounded bg-accent-red/20 px-3 py-1.5 text-xs font-medium text-accent-red hover:bg-accent-red/30"
-                            >
-                              <X size={12} /> 拒绝
-                            </button>
+                            {/* Mark featured (only for approved submissions) */}
+                            {sub.status === 'approved' && (
+                              <button
+                                onClick={() => handleMarkFeatured(sub.id)}
+                                disabled={markingFeatured === sub.id}
+                                className="flex items-center gap-1 rounded bg-accent-yellow/10 px-3 py-1.5 text-xs font-medium text-accent-yellow hover:bg-accent-yellow/20 disabled:opacity-50"
+                              >
+                                {markingFeatured === sub.id ? <Loader2 size={12} className="animate-spin" /> : <Star size={12} />}
+                                标记精选
+                              </button>
+                            )}
                           </div>
-                        )}
+                          {/* Approve/reject actions */}
+                          {sub.status !== 'approved' && sub.status !== 'rejected' && (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                placeholder="审核备注（可选）"
+                                value={reviewing === sub.id ? reviewNotes : ''}
+                                onChange={e => { setReviewing(sub.id); setReviewNotes(e.target.value) }}
+                                onFocus={() => setReviewing(sub.id)}
+                                className="flex-1 rounded border border-border-default bg-bg-base px-2 py-1.5 text-xs text-text-primary outline-none focus:border-accent-blue"
+                              />
+                              <button
+                                onClick={() => handleApprove(sub.id)}
+                                className="flex items-center gap-1 rounded bg-accent-green/20 px-3 py-1.5 text-xs font-medium text-accent-green hover:bg-accent-green/30"
+                              >
+                                <Check size={12} /> 通过
+                              </button>
+                              <button
+                                onClick={() => handleReject(sub.id)}
+                                className="flex items-center gap-1 rounded bg-accent-red/20 px-3 py-1.5 text-xs font-medium text-accent-red hover:bg-accent-red/30"
+                              >
+                                <X size={12} /> 拒绝
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

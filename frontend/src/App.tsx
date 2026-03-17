@@ -66,14 +66,15 @@ export default function App() {
         <Route index element={<HomeRedirect />} />
         {/* Admin-only routes */}
         <Route path="dashboard" element={<RequireAdmin><Dashboard /></RequireAdmin>} />
-        <Route path="agents" element={<RequireAdmin><Agents /></RequireAdmin>} />
-        <Route path="agents/create" element={<RequireAdmin><AgentCreate /></RequireAdmin>} />
-        <Route path="agents/:id" element={<RequireAdmin><AgentDetail /></RequireAdmin>} />
         <Route path="models" element={<RequireAdmin><AIModels /></RequireAdmin>} />
         <Route path="channels" element={<RequireAdmin><Channels /></RequireAdmin>} />
         <Route path="nodes" element={<RequireAdmin><Nodes /></RequireAdmin>} />
-        <Route path="api" element={<RequireAdmin><ApiAccess /></RequireAdmin>} />
-        <Route path="cron" element={<RequireAdmin><CronJobs /></RequireAdmin>} />
+        <Route path="api" element={<ApiAccess />} />
+        <Route path="cron" element={<CronJobs />} />
+        {/* Agent management - all logged-in users */}
+        <Route path="agents" element={<Agents />} />
+        <Route path="agents/create" element={<AgentCreate />} />
+        <Route path="agents/:id" element={<AgentDetail />} />
         <Route path="knowledge" element={<RequireAdmin><KnowledgeBase /></RequireAdmin>} />
         {/* Admin section - direct access to features */}
         <Route path="admin" element={<Navigate to="/admin/users" replace />} />
@@ -83,7 +84,7 @@ export default function App() {
         {/* Regular user accessible routes */}
         <Route path="chat" element={<Chat />} />
         <Route path="skills" element={<SkillStore />} />
-        <Route path="sessions" element={<Sessions />} />
+        <Route path="sessions" element={<RequireAdmin><Sessions /></RequireAdmin>} />
         <Route path="files" element={<FileManager />} />
         <Route path="profile" element={<Profile />} />
       </Route>

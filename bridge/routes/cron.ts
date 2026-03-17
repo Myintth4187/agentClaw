@@ -141,5 +141,120 @@ export function cronRoutes(client: BridgeGatewayClient): Router {
     }
   }));
 
+  // ----------------------------------------------------------------
+  // Per-agent cron routes: /agents/:agentId/cron/...
+  // These mirror the /cron/... routes but let the proxy route by agentId
+  // ----------------------------------------------------------------
+
+  function checkAgentAccess(req: any, res: any, agentId: string): boolean {
+    const requestAgentId = req.headers["x-agent-id"] as string | undefined;
+    const isAdmin = req.headers["x-is-admin"] === "true";
+    if (!isAdmin && requestAgentId !== agentId) {
+      res.status(403).json({ detail: "Access denied" });
+      return false;
+    }
+    return true;
+  }
+
+  // GET /agents/:agentId/cron/jobs
+  router.get("/agents/:agentId/cron/jobs", asyncHandler(async (req, res) => {
+    if (!checkAgentAccess(req, res, req.params.agentId)) return;
+    const includeDisabled = req.query.include_disabled === "true";
+
+    try {
+      const raw = await client.request<Record<string, unknown>[] | { jobs: Record<string, unknown>[] }>("cron.list", {});
+      const jobs = Array.isArray(raw) ? raw : (raw?.jobs || []);
+      let result = jobs.map(serializeJob);
+
+      if (!includeDisabled) {
+        result = result.filter((j) => j.enabled);
+      }
+
+      result.sort((a, b) => (a.next_run_at_ms || Infinity) - (b.next_run_at_ms || Infinity));
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ detail: (err as Error).message });
+    }
+  }));
+
+  // POST /agents/:agentId/cron/jobs
+  router.post("/agents/:agentId/cron/jobs", asyncHandler(async (req, res) => {
+    if (!checkAgentAccess(req, res, req.params.agentId)) return;
+    const { name, message, every_seconds, cron_expr, at_iso, deliver, channel, to } = req.body;
+
+    if (!every_seconds && !cron_expr && !at_iso) {
+      res.status(400).json({ detail: "Must specify every_seconds, cron_expr, or at_iso" });
+      return;
+    }
+
+    try {
+      const params: Record<string, unknown> = { name, message };
+      if (every_seconds) params.everySeconds = every_seconds;
+      if (cron_expr) params.cronExpr = cron_expr;
+      if (at_iso) params.atIso = at_iso;
+      if (deliver !== undefined) params.deliver = deliver;
+      if (channel) params.channel = channel;
+      if (to) params.to = to;
+
+      const job = await client.request<Record<string, unknown>>("cron.create", params);
+      res.json(serializeJob(job));
+    } catch (err) {
+      res.status(500).json({ detail: (err as Error).message });
+    }
+  }));
+
+  // DELETE /agents/:agentId/cron/jobs/:job_id
+  router.delete("/agents/:agentId/cron/jobs/:job_id", asyncHandler(async (req, res) => {
+    if (!checkAgentAccess(req, res, req.params.agentId)) return;
+    try {
+      await client.request("cron.delete", { id: req.params.job_id });
+      res.json({ ok: true });
+    } catch (err) {
+      const msg = (err as Error).message;
+      if (msg.includes("not found")) {
+        res.status(404).json({ detail: "Job not found" });
+      } else {
+        res.status(500).json({ detail: msg });
+      }
+    }
+  }));
+
+  // PUT /agents/:agentId/cron/jobs/:job_id/toggle
+  router.put("/agents/:agentId/cron/jobs/:job_id/toggle", asyncHandler(async (req, res) => {
+    if (!checkAgentAccess(req, res, req.params.agentId)) return;
+    const { enabled } = req.body;
+
+    try {
+      const job = await client.request<Record<string, unknown>>("cron.toggle", {
+        id: req.params.job_id,
+        enabled,
+      });
+      res.json(serializeJob(job));
+    } catch (err) {
+      const msg = (err as Error).message;
+      if (msg.includes("not found")) {
+        res.status(404).json({ detail: "Job not found" });
+      } else {
+        res.status(500).json({ detail: msg });
+      }
+    }
+  }));
+
+  // POST /agents/:agentId/cron/jobs/:job_id/run
+  router.post("/agents/:agentId/cron/jobs/:job_id/run", asyncHandler(async (req, res) => {
+    if (!checkAgentAccess(req, res, req.params.agentId)) return;
+    try {
+      await client.request("cron.run", { id: req.params.job_id });
+      res.json({ ok: true });
+    } catch (err) {
+      const msg = (err as Error).message;
+      if (msg.includes("not found")) {
+        res.status(404).json({ detail: "Job not found" });
+      } else {
+        res.status(500).json({ detail: msg });
+      }
+    }
+  }));
+
   return router;
 }

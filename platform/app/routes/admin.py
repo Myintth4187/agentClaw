@@ -40,12 +40,11 @@ class UpdateUserRequest(BaseModel):
     is_active: bool | None = None
 
 
-async def _delete_agent(user_id: str) -> bool:
-    """Delete an Agent from the shared OpenClaw instance.
+async def _delete_agent_by_openclaw_id(openclaw_agent_id: str) -> bool:
+    """Delete an Agent from the shared OpenClaw instance by its openclaw_agent_id.
 
     Returns True if successful, False otherwise.
     """
-    # Get shared container URL
     if settings.dev_openclaw_url:
         bridge_url = settings.dev_openclaw_url
     else:
@@ -55,12 +54,12 @@ async def _delete_agent(user_id: str) -> bool:
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.delete(
-                f"{bridge_url}/api/agents/{user_id}",
+                f"{bridge_url}/api/agents/{openclaw_agent_id}",
                 params={"delete_files": "true"},
             )
             return resp.status_code == 200
     except Exception as e:
-        print(f"[admin] Failed to delete agent for user {user_id}: {e}")
+        print(f"[admin] Failed to delete agent {openclaw_agent_id}: {e}")
         return False
 
 
@@ -72,6 +71,17 @@ async def list_users(db: AsyncSession = Depends(get_db)):
 
     # Get shared container info for status lookup
     container_info = await get_shared_container_info()
+
+    # Build user_id -> openclaw_agent_id mapping for container status lookup
+    user_ids = [u.id for u in users]
+    agent_rows = (await db.execute(
+        select(UserAgent).where(
+            UserAgent.user_id.in_(user_ids),
+            UserAgent.is_default == True,
+            UserAgent.status == "active",
+        )
+    )).scalars().all()
+    user_to_openclaw_id: dict[str, str] = {a.user_id: a.openclaw_agent_id for a in agent_rows}
 
     for u in users:
         # Today's usage
@@ -89,11 +99,12 @@ async def list_users(db: AsyncSession = Depends(get_db)):
         container_memory = None
         container_memory_percent = None
 
-        if container_info.get('status') == 'running':
+        openclaw_id = user_to_openclaw_id.get(u.id)
+        if container_info.get('status') == 'running' and openclaw_id:
             try:
                 async with httpx.AsyncClient(timeout=5.0) as client:
                     resp = await client.get(
-                        f"http://{container_info['internal_host']}:{container_info['internal_port']}/api/agents/{u.id}/status"
+                        f"http://{container_info['internal_host']}:{container_info['internal_port']}/api/agents/{openclaw_id}/status"
                     )
                     if resp.status_code == 200:
                         status_data = resp.json()
@@ -158,8 +169,12 @@ async def delete_user(user_id: str, db: AsyncSession = Depends(get_db)):
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Delete Agent from shared OpenClaw instance
-    await _delete_agent(user_id)
+    # Delete Agent from shared OpenClaw instance using openclaw_agent_id
+    agent_record = (await db.execute(
+        select(UserAgent).where(UserAgent.user_id == user_id, UserAgent.is_default == True)
+    )).scalar_one_or_none()
+    if agent_record:
+        await _delete_agent_by_openclaw_id(agent_record.openclaw_agent_id)
 
     # Delete usage records
     await db.execute(delete(UsageRecord).where(UsageRecord.user_id == user_id))
@@ -172,8 +187,16 @@ async def delete_user(user_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.delete("/users/{user_id}/container")
-async def delete_user_container(user_id: str):
+async def delete_user_container(user_id: str, db: AsyncSession = Depends(get_db)):
     """Stop and remove a user's sandbox container (data is preserved)."""
+    # Look up openclaw_agent_id
+    agent_record = (await db.execute(
+        select(UserAgent).where(UserAgent.user_id == user_id, UserAgent.is_default == True)
+    )).scalar_one_or_none()
+    if agent_record is None:
+        raise HTTPException(status_code=404, detail="No agent found for user")
+    openclaw_agent_id = agent_record.openclaw_agent_id
+
     if settings.dev_openclaw_url:
         bridge_url = settings.dev_openclaw_url
     else:
@@ -183,7 +206,7 @@ async def delete_user_container(user_id: str):
     try:
         async with httpx.AsyncClient(timeout=20.0) as client:
             resp = await client.delete(
-                f"{bridge_url}/api/agents/{user_id}/container",
+                f"{bridge_url}/api/agents/{openclaw_agent_id}/container",
             )
             if resp.status_code == 200:
                 return resp.json()
@@ -213,3 +236,31 @@ async def list_all_user_agents(db: AsyncSession = Depends(get_db)):
         }
         for a in agents
     ]
+
+
+# ---------------------------------------------------------------------------
+# Platform config (admin-only)
+# ---------------------------------------------------------------------------
+
+class PlatformConfigResponse(BaseModel):
+    max_agents_per_user: int
+
+
+class PlatformConfigUpdate(BaseModel):
+    max_agents_per_user: int | None = None
+
+
+@router.get("/config", response_model=PlatformConfigResponse)
+async def get_platform_config():
+    """Get current platform configuration."""
+    return PlatformConfigResponse(max_agents_per_user=settings.max_agents_per_user)
+
+
+@router.put("/config", response_model=PlatformConfigResponse)
+async def update_platform_config(body: PlatformConfigUpdate):
+    """Update platform configuration (runtime override, resets on restart)."""
+    if body.max_agents_per_user is not None:
+        if body.max_agents_per_user < 1:
+            raise HTTPException(status_code=400, detail="max_agents_per_user must be >= 1")
+        settings.max_agents_per_user = body.max_agents_per_user
+    return PlatformConfigResponse(max_agents_per_user=settings.max_agents_per_user)

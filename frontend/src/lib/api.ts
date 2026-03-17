@@ -67,21 +67,20 @@ export interface AgentListResult {
 export interface AgentFileEntry {
   name: string
   path: string
-  missing: boolean
-  size: number
-  updatedAtMs: number
+  type: 'file' | 'directory'
+  size?: number
+  modified?: string
 }
 
-export interface AgentFilesResult {
-  agentId: string
-  workspace: string
-  files: AgentFileEntry[]
-}
+// Bridge returns a flat array of AgentFileEntry
+export type AgentFilesResult = AgentFileEntry[]
 
 export interface AgentFileContent {
-  agentId: string
-  workspace: string
-  file: { name: string; content: string }
+  name: string
+  path: string
+  content: string | null
+  size: number
+  modified: string
 }
 
 export interface Session {
@@ -462,9 +461,15 @@ export interface CronJob {
   created_at_ms: number
 }
 
-export async function listCronJobs(includeDisabled = true): Promise<CronJob[]> {
+function cronBase(agentId?: string) {
+  return agentId
+    ? `/api/openclaw/agents/${encodeURIComponent(agentId)}/cron/jobs`
+    : '/api/openclaw/cron/jobs'
+}
+
+export async function listCronJobs(includeDisabled = true, agentId?: string): Promise<CronJob[]> {
   const params = includeDisabled ? '?include_disabled=true' : ''
-  return fetchJSON<CronJob[]>(`/api/openclaw/cron/jobs${params}`)
+  return fetchJSON<CronJob[]>(`${cronBase(agentId)}${params}`)
 }
 
 export async function createCronJob(params: {
@@ -476,22 +481,22 @@ export async function createCronJob(params: {
   deliver?: boolean
   channel?: string
   to?: string
-}): Promise<CronJob> {
-  return fetchJSON<CronJob>('/api/openclaw/cron/jobs', {
+}, agentId?: string): Promise<CronJob> {
+  return fetchJSON<CronJob>(cronBase(agentId), {
     method: 'POST',
     body: JSON.stringify(params),
   })
 }
 
-export async function deleteCronJob(jobId: string): Promise<void> {
-  await fetchJSON<unknown>(`/api/openclaw/cron/jobs/${encodeURIComponent(jobId)}`, {
+export async function deleteCronJob(jobId: string, agentId?: string): Promise<void> {
+  await fetchJSON<unknown>(`${cronBase(agentId)}/${encodeURIComponent(jobId)}`, {
     method: 'DELETE',
   })
 }
 
-export async function toggleCronJob(jobId: string, enabled: boolean): Promise<CronJob> {
+export async function toggleCronJob(jobId: string, enabled: boolean, agentId?: string): Promise<CronJob> {
   return fetchJSON<CronJob>(
-    `/api/openclaw/cron/jobs/${encodeURIComponent(jobId)}/toggle`,
+    `${cronBase(agentId)}/${encodeURIComponent(jobId)}/toggle`,
     {
       method: 'PUT',
       body: JSON.stringify({ enabled }),
@@ -499,9 +504,9 @@ export async function toggleCronJob(jobId: string, enabled: boolean): Promise<Cr
   )
 }
 
-export async function runCronJob(jobId: string): Promise<void> {
+export async function runCronJob(jobId: string, agentId?: string): Promise<void> {
   await fetchJSON<unknown>(
-    `/api/openclaw/cron/jobs/${encodeURIComponent(jobId)}/run`,
+    `${cronBase(agentId)}/${encodeURIComponent(jobId)}/run`,
     { method: 'POST' },
   )
 }
@@ -882,6 +887,84 @@ export async function adminRejectSubmission(id: string, notes?: string): Promise
     method: 'POST',
     body: JSON.stringify({ admin_notes: notes }),
   })
+}
+
+export async function adminTestInstallSubmission(id: string): Promise<{ ok: boolean; message: string }> {
+  return fetchJSON<{ ok: boolean; message: string }>(`/api/admin/skills/submissions/${encodeURIComponent(id)}/test-install`, {
+    method: 'POST',
+  })
+}
+
+export async function adminMarkSubmissionFeatured(id: string): Promise<{ ok: boolean; is_featured: boolean; skill_name: string }> {
+  return fetchJSON<{ ok: boolean; is_featured: boolean; skill_name: string }>(`/api/admin/skills/submissions/${encodeURIComponent(id)}/mark-featured`, {
+    method: 'POST',
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Platform agent management (user-facing, DB-backed)
+// ---------------------------------------------------------------------------
+
+export interface UserAgentRecord {
+  id: string              // platform UUID
+  openclaw_agent_id: string
+  name: string
+  description: string
+  is_default: boolean
+  status: string
+  created_at: string
+}
+
+export interface UserAgentListResult {
+  agents: UserAgentRecord[]
+  max_allowed: number
+  current_count: number
+}
+
+export async function listMyAgents(): Promise<UserAgentListResult> {
+  return fetchJSON<UserAgentListResult>('/api/agents')
+}
+
+export async function createMyAgent(name: string, description?: string): Promise<UserAgentRecord> {
+  return fetchJSON<UserAgentRecord>('/api/agents', {
+    method: 'POST',
+    body: JSON.stringify({ name, description: description || '' }),
+  })
+}
+
+export async function deleteMyAgent(agentId: string): Promise<{ ok: boolean }> {
+  return fetchJSON<{ ok: boolean }>(`/api/agents/${encodeURIComponent(agentId)}`, { method: 'DELETE' })
+}
+
+export async function setDefaultMyAgent(agentId: string): Promise<{ ok: boolean }> {
+  return fetchJSON<{ ok: boolean }>(`/api/agents/${encodeURIComponent(agentId)}/set-default`, { method: 'POST' })
+}
+
+// Admin users list
+export interface AdminUserSummary {
+  id: string
+  username: string
+  email: string
+  role: string
+  quota_tier: string
+  is_active: boolean
+  tokens_used_today: number
+  container_status: string | null
+}
+
+export async function adminListUsers(): Promise<AdminUserSummary[]> {
+  return fetchJSON<AdminUserSummary[]>('/api/admin/users')
+}
+
+export interface AdminUserAgentMapping {
+  id: string
+  user_id: string
+  openclaw_agent_id: string
+  name: string
+}
+
+export async function adminListUserAgents(): Promise<AdminUserAgentMapping[]> {
+  return fetchJSON<AdminUserAgentMapping[]>('/api/admin/user-agents')
 }
 
 // Platform skills admin

@@ -1067,6 +1067,146 @@ async def admin_reject_submission(
     return {"ok": True}
 
 
+@admin_router.post("/submissions/{submission_id}/test-install")
+async def admin_test_install_submission(
+    submission_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(require_admin),
+):
+    """Install a pending submission's skill files to the admin's own agent for testing."""
+    sub = (await db.execute(
+        select(SkillSubmission).where(SkillSubmission.id == submission_id)
+    )).scalar_one_or_none()
+    if sub is None:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    # Get admin's default agent
+    user_agent = (await db.execute(
+        select(UserAgent).where(
+            UserAgent.user_id == admin.id,
+            UserAgent.is_default == True,
+            UserAgent.status == "active",
+        )
+    )).scalar_one_or_none()
+    if user_agent is None:
+        raise HTTPException(status_code=400, detail="No default agent found for admin user")
+
+    agent_id = user_agent.openclaw_agent_id
+    bridge_url = await _get_bridge_url()
+
+    # If submission has been approved (files moved to curated-skills dir), use those
+    approved_skill_dir = _skill_dir(sub.skill_name)
+    if approved_skill_dir.is_dir():
+        success = await _install_to_agent(agent_id, sub.skill_name, bridge_url)
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to install skill to agent")
+        return {"ok": True, "message": f"Skill '{sub.skill_name}' installed from curated directory"}
+
+    # Otherwise use the temp submission zip file
+    if not sub.file_path or not Path(sub.file_path).exists():
+        raise HTTPException(status_code=400, detail="No skill files available for this submission")
+
+    # Extract zip and install files
+    try:
+        files_to_install: dict[str, str] = {}
+        zip_path = Path(sub.file_path)
+        # file_path may be a directory or a zip file
+        if zip_path.is_dir():
+            for root, _dirs, filenames in os.walk(zip_path):
+                for fname in filenames:
+                    fpath = Path(root) / fname
+                    rel = str(fpath.relative_to(zip_path))
+                    try:
+                        files_to_install[rel] = fpath.read_text(encoding='utf-8')
+                    except UnicodeDecodeError:
+                        pass
+        else:
+            with zipfile.ZipFile(zip_path) as zf:
+                for name in zf.namelist():
+                    if name.endswith('/'):
+                        continue
+                    parts = name.split('/')
+                    rel = '/'.join(parts[1:]) if len(parts) > 1 else parts[0]
+                    if not rel:
+                        continue
+                    try:
+                        files_to_install[rel] = zf.read(name).decode('utf-8')
+                    except UnicodeDecodeError:
+                        pass
+
+        if not files_to_install:
+            raise HTTPException(status_code=400, detail="No readable files found in submission")
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            for rel_path, content in files_to_install.items():
+                resp = await client.put(
+                    f"{bridge_url}/api/agents/{agent_id}/files/skills/{sub.skill_name}/{rel_path}",
+                    json={"content": content},
+                    headers={
+                        "X-Agent-Id": agent_id,
+                        "X-Agent-Id-Sig": _sign_agent_id(agent_id),
+                        "X-Is-Admin": "true",
+                    },
+                )
+                if resp.status_code not in (200, 201):
+                    raise HTTPException(status_code=500, detail=f"Failed to install file {rel_path}")
+
+        return {"ok": True, "message": f"Skill '{sub.skill_name}' test-installed to your agent"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[admin] Failed to test-install submission {submission_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@admin_router.post("/curated/{skill_id}/featured")
+async def admin_toggle_skill_featured(
+    skill_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Toggle the is_featured flag for a curated skill."""
+    skill = (await db.execute(
+        select(CuratedSkill).where(CuratedSkill.id == skill_id)
+    )).scalar_one_or_none()
+    if skill is None:
+        raise HTTPException(status_code=404, detail="Skill not found")
+
+    new_featured = not skill.is_featured
+    await db.execute(
+        update(CuratedSkill).where(CuratedSkill.id == skill_id).values(is_featured=new_featured)
+    )
+    await db.commit()
+    return {"ok": True, "is_featured": new_featured}
+
+
+@admin_router.post("/submissions/{submission_id}/mark-featured")
+async def admin_mark_submission_featured(
+    submission_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Mark the curated skill associated with an approved submission as featured."""
+    sub = (await db.execute(
+        select(SkillSubmission).where(SkillSubmission.id == submission_id)
+    )).scalar_one_or_none()
+    if sub is None:
+        raise HTTPException(status_code=404, detail="Submission not found")
+    if sub.status != "approved":
+        raise HTTPException(status_code=400, detail="Submission must be approved before marking featured")
+
+    skill = (await db.execute(
+        select(CuratedSkill).where(CuratedSkill.name == sub.skill_name)
+    )).scalar_one_or_none()
+    if skill is None:
+        raise HTTPException(status_code=404, detail="Associated curated skill not found")
+
+    new_featured = not skill.is_featured
+    await db.execute(
+        update(CuratedSkill).where(CuratedSkill.id == skill.id).values(is_featured=new_featured)
+    )
+    await db.commit()
+    return {"ok": True, "is_featured": new_featured, "skill_name": sub.skill_name}
+
+
 # --- Platform skills visibility admin ---
 
 class PlatformSkillVisibilityOut(BaseModel):

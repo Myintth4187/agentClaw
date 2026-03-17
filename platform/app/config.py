@@ -71,6 +71,9 @@ class Settings(BaseSettings):
     quota_basic: int = 1_000_000
     quota_pro: int = 10_000_000
 
+    # Agent limits
+    max_agents_per_user: int = 5  # Can override with MAX_AGENTS_PER_USER env var
+
     # Platform gateway
     host: str = "0.0.0.0"
     port: int = 8080
@@ -88,7 +91,7 @@ class Settings(BaseSettings):
     # Local dev: OpenClaw Gateway WS URL for direct WS proxy (e.g. "ws://127.0.0.1:18789")
     dev_gateway_url: str = ""
 
-    model_config = {"env_prefix": "PLATFORM_"}
+    model_config = {"env_prefix": "PLATFORM_", "frozen": False}
 
 
 settings = Settings()
