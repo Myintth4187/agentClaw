@@ -188,12 +188,12 @@ export default function AdminSkills() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-dark-text">技能管理</h1>
-        <p className="mt-1 text-sm text-dark-text-secondary">管理精选技能、平台技能可见性和用户提交审核</p>
+        <h1 className="text-2xl font-bold text-text-primary">技能管理</h1>
+        <p className="mt-1 text-sm text-text-secondary">管理精选技能、平台技能可见性和用户提交审核</p>
       </div>
 
       {/* Tabs */}
-      <div className="mb-6 flex gap-1 rounded-lg bg-dark-card p-1 border border-dark-border">
+      <div className="mb-6 flex gap-1 rounded-lg bg-bg-surface p-1 border border-border-default">
         {tabs.map(t => (
           <button
             key={t.key}
@@ -201,7 +201,7 @@ export default function AdminSkills() {
             className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
               tab === t.key
                 ? 'bg-accent-blue text-white'
-                : 'text-dark-text-secondary hover:text-dark-text hover:bg-dark-bg'
+                : 'text-text-secondary hover:text-text-primary hover:bg-bg-base'
             }`}
           >
             {t.label}
@@ -218,7 +218,7 @@ export default function AdminSkills() {
       {tab === 'curated' && (
         <div>
           <div className="mb-4 flex items-center justify-between">
-            <span className="text-sm text-dark-text-secondary">{skills.length} 个精选技能</span>
+            <span className="text-sm text-text-secondary">{skills.length} 个精选技能</span>
             <button
               onClick={() => setShowAdd(!showAdd)}
               className="flex items-center gap-1.5 rounded-lg bg-accent-blue px-4 py-2 text-sm font-medium text-white hover:bg-accent-blue/90"
@@ -230,48 +230,48 @@ export default function AdminSkills() {
 
           {/* Add form */}
           {showAdd && (
-            <form onSubmit={handleUpload} className="mb-6 rounded-xl border border-dark-border bg-dark-card p-5 space-y-3">
+            <form onSubmit={handleUpload} className="mb-6 rounded-xl border border-border-default bg-bg-surface p-5 space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-dark-text-secondary mb-1">技能名称 *</label>
+                  <label className="block text-xs font-medium text-text-secondary mb-1">技能名称 *</label>
                   <input
                     type="text"
                     value={addName}
                     onChange={e => setAddName(e.target.value)}
-                    className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue"
+                    className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-dark-text-secondary mb-1">作者</label>
+                  <label className="block text-xs font-medium text-text-secondary mb-1">作者</label>
                   <input
                     type="text"
                     value={addAuthor}
                     onChange={e => setAddAuthor(e.target.value)}
-                    className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue"
+                    className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-dark-text-secondary mb-1">描述</label>
+                <label className="block text-xs font-medium text-text-secondary mb-1">描述</label>
                 <textarea
                   value={addDesc}
                   onChange={e => setAddDesc(e.target.value)}
                   rows={2}
-                  className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue resize-none"
+                  className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue resize-none"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-dark-text-secondary mb-1">分类</label>
+                  <label className="block text-xs font-medium text-text-secondary mb-1">分类</label>
                   <input
                     type="text"
                     value={addCategory}
                     onChange={e => setAddCategory(e.target.value)}
-                    className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue"
+                    className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue"
                   />
                 </div>
                 <div className="flex items-end gap-2 pb-1">
-                  <label className="flex items-center gap-2 text-sm text-dark-text cursor-pointer">
+                  <label className="flex items-center gap-2 text-sm text-text-primary cursor-pointer">
                     <input
                       type="checkbox"
                       checked={addFeatured}
@@ -283,12 +283,12 @@ export default function AdminSkills() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-dark-text-secondary mb-1">技能文件 (zip) *</label>
+                <label className="block text-xs font-medium text-text-secondary mb-1">技能文件 (zip) *</label>
                 <input
                   type="file"
                   accept=".zip"
                   onChange={e => setAddFile(e.target.files?.[0] || null)}
-                  className="text-sm text-dark-text"
+                  className="text-sm text-text-primary"
                 />
               </div>
               <button
@@ -308,7 +308,7 @@ export default function AdminSkills() {
               <Loader2 size={24} className="animate-spin text-accent-blue" />
             </div>
           ) : skills.length === 0 ? (
-            <div className="rounded-xl border border-dark-border bg-dark-card p-8 text-center text-sm text-dark-text-secondary">
+            <div className="rounded-xl border border-border-default bg-bg-surface p-8 text-center text-sm text-text-secondary">
               暂无精选技能
             </div>
           ) : (
@@ -316,7 +316,7 @@ export default function AdminSkills() {
               {skills.map(skill => {
                 const isEditing = editingId === skill.id
                 return (
-                  <div key={skill.id} className="rounded-xl border border-dark-border bg-dark-card px-5 py-4">
+                  <div key={skill.id} className="rounded-xl border border-border-default bg-bg-surface px-5 py-4">
                     {isEditing ? (
                       <div className="space-y-2">
                         <input
@@ -324,7 +324,7 @@ export default function AdminSkills() {
                           defaultValue={skill.description}
                           onChange={e => setEditFields(prev => ({ ...prev, description: e.target.value }))}
                           placeholder="描述"
-                          className="w-full rounded border border-dark-border bg-dark-bg px-2 py-1 text-sm text-dark-text outline-none"
+                          className="w-full rounded border border-border-default bg-bg-base px-2 py-1 text-sm text-text-primary outline-none"
                         />
                         <div className="flex gap-2">
                           <input
@@ -332,14 +332,14 @@ export default function AdminSkills() {
                             defaultValue={skill.author}
                             onChange={e => setEditFields(prev => ({ ...prev, author: e.target.value }))}
                             placeholder="作者"
-                            className="flex-1 rounded border border-dark-border bg-dark-bg px-2 py-1 text-sm text-dark-text outline-none"
+                            className="flex-1 rounded border border-border-default bg-bg-base px-2 py-1 text-sm text-text-primary outline-none"
                           />
                           <input
                             type="text"
                             defaultValue={skill.category}
                             onChange={e => setEditFields(prev => ({ ...prev, category: e.target.value }))}
                             placeholder="分类"
-                            className="flex-1 rounded border border-dark-border bg-dark-bg px-2 py-1 text-sm text-dark-text outline-none"
+                            className="flex-1 rounded border border-border-default bg-bg-base px-2 py-1 text-sm text-text-primary outline-none"
                           />
                         </div>
                         <div className="flex gap-2">
@@ -352,7 +352,7 @@ export default function AdminSkills() {
                           </button>
                           <button
                             onClick={() => { setEditingId(null); setEditFields({}) }}
-                            className="flex items-center gap-1 rounded bg-dark-border/30 px-3 py-1 text-xs text-dark-text-secondary hover:bg-dark-border/50"
+                            className="flex items-center gap-1 rounded bg-border-default/30 px-3 py-1 text-xs text-text-secondary hover:bg-border-default/50"
                           >
                             <X size={12} /> 取消
                           </button>
@@ -363,23 +363,23 @@ export default function AdminSkills() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             {skill.is_featured && <Star size={14} className="text-accent-yellow shrink-0" />}
-                            <span className="text-sm font-medium text-dark-text">{skill.name}</span>
-                            <span className="rounded bg-dark-bg px-1.5 py-0.5 text-xs text-dark-text-secondary">{skill.category}</span>
-                            <span className="text-xs text-dark-text-secondary">{skill.install_count} 次安装</span>
+                            <span className="text-sm font-medium text-text-primary">{skill.name}</span>
+                            <span className="rounded bg-bg-base px-1.5 py-0.5 text-xs text-text-secondary">{skill.category}</span>
+                            <span className="text-xs text-text-secondary">{skill.install_count} 次安装</span>
                           </div>
-                          <p className="mt-0.5 text-xs text-dark-text-secondary truncate">{skill.description}</p>
+                          <p className="mt-0.5 text-xs text-text-secondary truncate">{skill.description}</p>
                         </div>
                         <div className="ml-4 flex shrink-0 gap-1.5">
                           <button
                             onClick={() => { setEditingId(skill.id); setEditFields({}) }}
-                            className="rounded p-1.5 text-dark-text-secondary hover:bg-dark-bg hover:text-dark-text"
+                            className="rounded p-1.5 text-text-secondary hover:bg-bg-base hover:text-text-primary"
                             title="编辑"
                           >
                             <Edit2 size={14} />
                           </button>
                           <button
                             onClick={() => handleDelete(skill.id)}
-                            className="rounded p-1.5 text-dark-text-secondary hover:bg-accent-red/10 hover:text-accent-red"
+                            className="rounded p-1.5 text-text-secondary hover:bg-accent-red/10 hover:text-accent-red"
                             title="删除"
                           >
                             <Trash2 size={14} />
@@ -399,7 +399,7 @@ export default function AdminSkills() {
       {tab === 'platform' && (
         <div>
           <div className="mb-4 flex items-center justify-between rounded-lg border border-accent-blue/20 bg-accent-blue/5 px-4 py-3">
-            <p className="text-sm text-dark-text">
+            <p className="text-sm text-text-primary">
               <Package size={14} className="inline mr-1.5 text-accent-blue" />
               平台技能来自项目 skills/ 目录，管理员可以控制哪些技能对用户可见。
             </p>
@@ -418,7 +418,7 @@ export default function AdminSkills() {
               <Loader2 size={24} className="animate-spin text-accent-blue" />
             </div>
           ) : platformSkills.length === 0 ? (
-            <div className="rounded-xl border border-dark-border bg-dark-card p-8 text-center text-sm text-dark-text-secondary">
+            <div className="rounded-xl border border-border-default bg-bg-surface p-8 text-center text-sm text-text-secondary">
               暂无平台技能，请先将技能放入项目 skills/ 目录
             </div>
           ) : (
@@ -428,15 +428,15 @@ export default function AdminSkills() {
                 return (
                   <div
                     key={skill.skill_name}
-                    className="flex items-center justify-between rounded-lg border border-dark-border bg-dark-card px-4 py-3"
+                    className="flex items-center justify-between rounded-lg border border-border-default bg-bg-surface px-4 py-3"
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded bg-accent-blue/10">
                         <Package size={16} className="text-accent-blue" />
                       </div>
                       <div>
-                        <h3 className="text-sm font-medium text-dark-text">{skill.skill_name}</h3>
-                        <p className="text-xs text-dark-text-secondary">{skill.description || '暂无描述'}</p>
+                        <h3 className="text-sm font-medium text-text-primary">{skill.skill_name}</h3>
+                        <p className="text-xs text-text-secondary">{skill.description || '暂无描述'}</p>
                       </div>
                     </div>
                     <button
@@ -445,7 +445,7 @@ export default function AdminSkills() {
                       className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                         skill.is_visible
                           ? 'bg-accent-green/10 text-accent-green hover:bg-accent-green/20'
-                          : 'bg-dark-bg text-dark-text-secondary hover:text-dark-text'
+                          : 'bg-bg-base text-text-secondary hover:text-text-primary'
                       }`}
                     >
                       {isToggling ? (
@@ -476,7 +476,7 @@ export default function AdminSkills() {
                 className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                   statusFilter === s
                     ? 'bg-accent-blue text-white'
-                    : 'bg-dark-card text-dark-text-secondary hover:text-dark-text border border-dark-border'
+                    : 'bg-bg-surface text-text-secondary hover:text-text-primary border border-border-default'
                 }`}
               >
                 {s === 'pending' ? '待审核' : s === 'approved' ? '已通过' : s === 'rejected' ? '已拒绝' : '全部'}
@@ -489,17 +489,17 @@ export default function AdminSkills() {
               <Loader2 size={24} className="animate-spin text-accent-blue" />
             </div>
           ) : submissions.length === 0 ? (
-            <div className="rounded-xl border border-dark-border bg-dark-card p-8 text-center text-sm text-dark-text-secondary">
+            <div className="rounded-xl border border-border-default bg-bg-surface p-8 text-center text-sm text-text-secondary">
               暂无提交记录
             </div>
           ) : (
             <div className="space-y-3">
               {submissions.map(sub => (
-                <div key={sub.id} className="rounded-xl border border-dark-border bg-dark-card p-5">
+                <div key={sub.id} className="rounded-xl border border-border-default bg-bg-surface p-5">
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-dark-text">{sub.skill_name}</span>
+                        <span className="text-sm font-medium text-text-primary">{sub.skill_name}</span>
                         <span className={`rounded px-2 py-0.5 text-xs ${
                           sub.status === 'approved' ? 'bg-accent-green/10 text-accent-green' :
                           sub.status === 'rejected' ? 'bg-accent-red/10 text-accent-red' :
@@ -508,13 +508,13 @@ export default function AdminSkills() {
                           {sub.status === 'approved' ? '已通过' : sub.status === 'rejected' ? '已拒绝' : '待审核'}
                         </span>
                       </div>
-                      {sub.description && <p className="mt-1 text-xs text-dark-text-secondary">{sub.description}</p>}
+                      {sub.description && <p className="mt-1 text-xs text-text-secondary">{sub.description}</p>}
                       {sub.source_url && <p className="mt-0.5 text-xs text-accent-blue/70">{sub.source_url}</p>}
-                      <p className="mt-1 text-xs text-dark-text-secondary">
+                      <p className="mt-1 text-xs text-text-secondary">
                         提交者: {sub.user_id.slice(0, 8)}... | {new Date(sub.created_at).toLocaleDateString()}
                       </p>
                       {sub.admin_notes && (
-                        <p className="mt-1 text-xs text-dark-text-secondary">备注: {sub.admin_notes}</p>
+                        <p className="mt-1 text-xs text-text-secondary">备注: {sub.admin_notes}</p>
                       )}
                     </div>
                   </div>
@@ -527,7 +527,7 @@ export default function AdminSkills() {
                         value={reviewing === sub.id ? reviewNotes : ''}
                         onChange={e => { setReviewing(sub.id); setReviewNotes(e.target.value) }}
                         onFocus={() => setReviewing(sub.id)}
-                        className="flex-1 rounded border border-dark-border bg-dark-bg px-2 py-1 text-xs text-dark-text outline-none"
+                        className="flex-1 rounded border border-border-default bg-bg-base px-2 py-1 text-xs text-text-primary outline-none"
                       />
                       <button
                         onClick={() => handleApprove(sub.id)}

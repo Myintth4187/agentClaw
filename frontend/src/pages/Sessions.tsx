@@ -103,8 +103,8 @@ export default function Sessions() {
       <div className={`flex-1 min-w-0 ${selectedKey ? 'max-w-[55%]' : ''}`}>
         <div className="mb-6 flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-dark-text">会话历史</h1>
-            <p className="mt-1 text-sm text-dark-text-secondary">查看所有 Agent 的对话记录</p>
+            <h1 className="text-2xl font-bold text-text-primary">会话历史</h1>
+            <p className="mt-1 text-sm text-text-secondary">查看所有 Agent 的对话记录</p>
           </div>
           <div className="flex items-center gap-3">
             {/* Agent Selector for Admin */}
@@ -113,7 +113,7 @@ export default function Sessions() {
                 <select
                   value={selectedAgentId}
                   onChange={(e) => setSelectedAgentId(e.target.value)}
-                  className="appearance-none rounded-lg border border-dark-border bg-dark-card px-3 py-1.5 pr-8 text-xs text-dark-text focus:border-accent-blue focus:outline-none"
+                  className="appearance-none rounded-lg border border-border-default bg-bg-surface px-3 py-1.5 pr-8 text-xs text-text-primary focus:border-accent-blue focus:outline-none"
                 >
                   <option value="">所有 Agents</option>
                   {agents.map(agent => (
@@ -122,12 +122,12 @@ export default function Sessions() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-dark-text-secondary pointer-events-none" />
+                <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none" />
               </div>
             )}
             <button
               onClick={fetchSessionList}
-              className="flex items-center gap-1.5 rounded-lg border border-dark-border px-3 py-1.5 text-xs text-dark-text-secondary hover:text-dark-text transition-colors"
+              className="flex items-center gap-1.5 rounded-lg border border-border-default px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors"
             >
               <RefreshCw size={14} />
               刷新
@@ -140,15 +140,15 @@ export default function Sessions() {
             <Loader2 size={32} className="animate-spin text-accent-blue" />
           </div>
         ) : sessions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-dark-text-secondary">
+          <div className="flex flex-col items-center justify-center py-20 text-text-secondary">
             <MessageSquare size={32} className="mb-3 opacity-40" />
             暂无会话记录
           </div>
         ) : (
-          <div className="rounded-xl border border-dark-border bg-dark-card">
+          <div className="rounded-xl border border-border-default bg-bg-surface">
             <table className="w-full">
               <thead>
-                <tr className="text-left text-xs text-dark-text-secondary border-b border-dark-border">
+                <tr className="text-left text-xs text-text-secondary border-b border-border-default">
                   <th className="px-5 py-3 font-medium">会话</th>
                   <th className="px-4 py-3 font-medium">创建时间</th>
                   <th className="px-4 py-3 font-medium">最近更新</th>
@@ -159,23 +159,23 @@ export default function Sessions() {
                 {sessions.map(s => (
                   <tr
                     key={s.key}
-                    className={`border-t border-dark-border/50 transition-colors cursor-pointer ${
+                    className={`border-t border-border-default/50 transition-colors cursor-pointer ${
                       selectedKey === s.key
                         ? 'bg-accent-blue/5'
-                        : 'hover:bg-dark-card-hover'
+                        : 'hover:bg-bg-surface/50'
                     }`}
                     onClick={() => handleView(s.key)}
                   >
-                    <td className="px-5 py-3 text-sm text-dark-text max-w-[240px] truncate">
+                    <td className="px-5 py-3 text-sm text-text-primary max-w-[240px] truncate">
                       {s.title || s.key}
                     </td>
-                    <td className="px-4 py-3 text-sm text-dark-text-secondary whitespace-nowrap">
+                    <td className="px-4 py-3 text-sm text-text-secondary whitespace-nowrap">
                       <span className="flex items-center gap-1.5">
                         <Clock size={14} />
                         {formatTime(s.created_at)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-dark-text-secondary whitespace-nowrap">
+                    <td className="px-4 py-3 text-sm text-text-secondary whitespace-nowrap">
                       {formatTime(s.updated_at)}
                     </td>
                     <td className="px-4 py-3">
@@ -185,7 +185,7 @@ export default function Sessions() {
                           className={`transition-colors ${
                             selectedKey === s.key
                               ? 'text-accent-blue'
-                              : 'text-dark-text-secondary hover:text-accent-blue'
+                              : 'text-text-secondary hover:text-accent-blue'
                           }`}
                           title="查看会话"
                         >
@@ -193,7 +193,7 @@ export default function Sessions() {
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); handleDelete(s.key) }}
-                          className="text-dark-text-secondary hover:text-accent-red transition-colors"
+                          className="text-text-secondary hover:text-accent-red transition-colors"
                           title="删除会话"
                         >
                           <Trash2 size={16} />
@@ -210,15 +210,15 @@ export default function Sessions() {
 
       {/* Right: detail panel */}
       {selectedKey && (
-        <div className="w-[45%] min-w-[360px] flex flex-col rounded-xl border border-dark-border bg-dark-card overflow-hidden">
+        <div className="w-[45%] min-w-[360px] flex flex-col rounded-xl border border-border-default bg-bg-surface overflow-hidden">
           {/* Header */}
-          <div className="px-5 py-3 border-b border-dark-border flex items-center justify-between shrink-0">
+          <div className="px-5 py-3 border-b border-border-default flex items-center justify-between shrink-0">
             <div className="min-w-0">
-              <h2 className="text-sm font-semibold text-dark-text truncate">
+              <h2 className="text-sm font-semibold text-text-primary truncate">
                 {sessions.find(s => s.key === selectedKey)?.title || selectedKey}
               </h2>
               {detail && (
-                <p className="text-xs text-dark-text-secondary mt-0.5">
+                <p className="text-xs text-text-secondary mt-0.5">
                   {detail.messages.length} 条消息
                   {detail.created_at && ` · 创建于 ${formatTime(detail.created_at)}`}
                 </p>
@@ -226,7 +226,7 @@ export default function Sessions() {
             </div>
             <button
               onClick={() => { setSelectedKey(null); setDetail(null) }}
-              className="text-dark-text-secondary hover:text-dark-text transition-colors shrink-0 ml-3"
+              className="text-text-secondary hover:text-text-primary transition-colors shrink-0 ml-3"
             >
               <X size={16} />
             </button>
@@ -239,7 +239,7 @@ export default function Sessions() {
                 <Loader2 size={20} className="animate-spin text-accent-blue" />
               </div>
             ) : !detail || detail.messages.length === 0 ? (
-              <div className="text-center text-sm text-dark-text-secondary py-12">
+              <div className="text-center text-sm text-text-secondary py-12">
                 暂无消息记录
               </div>
             ) : (
@@ -252,16 +252,16 @@ export default function Sessions() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-medium text-dark-text">
+                      <span className="text-xs font-medium text-text-primary">
                         {msg.role === 'user' ? '用户' : 'Agent'}
                       </span>
                       {msg.timestamp && (
-                        <span className="text-xs text-dark-text-secondary">
+                        <span className="text-xs text-text-secondary">
                           {formatTime(msg.timestamp)}
                         </span>
                       )}
                     </div>
-                    <div className="text-sm text-dark-text whitespace-pre-wrap break-words leading-relaxed bg-dark-bg rounded-lg px-3 py-2">
+                    <div className="text-sm text-text-primary whitespace-pre-wrap break-words leading-relaxed bg-bg-base rounded-lg px-3 py-2">
                       {msg.content || '(空消息)'}
                     </div>
                   </div>

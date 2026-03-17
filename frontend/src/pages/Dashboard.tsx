@@ -22,14 +22,14 @@ function StatCard({
   label: string
 }) {
   return (
-    <div className="rounded-xl border border-dark-border bg-dark-card p-5">
+    <div className="rounded-xl border border-border-default bg-bg-surface p-5">
       <div className="flex items-start justify-between">
         <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconColor}`}>
           <Icon size={20} className="text-white" />
         </div>
       </div>
-      <div className="mt-4 text-3xl font-bold text-dark-text">{value}</div>
-      <div className="mt-1 text-sm text-dark-text-secondary">{label}</div>
+      <div className="mt-4 text-3xl font-bold text-text-primary">{value}</div>
+      <div className="mt-1 text-sm text-text-secondary">{label}</div>
     </div>
   )
 }
@@ -56,14 +56,14 @@ export default function Dashboard() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="animate-spin text-dark-text-secondary" size={32} /></div>
+  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="animate-spin text-text-secondary" size={32} /></div>
 
   return (
     <div>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-dark-text">仪表盘</h1>
-        <p className="mt-1 text-sm text-dark-text-secondary">Agent 运营总览</p>
+        <h1 className="text-2xl font-bold text-text-primary">仪表盘</h1>
+        <p className="mt-1 text-sm text-text-secondary">Agent 运营总览</p>
       </div>
 
       {/* Stat Cards */}
@@ -89,11 +89,11 @@ export default function Dashboard() {
       </div>
 
       {/* System Agents Table */}
-      <div className="mb-6 rounded-xl border border-dark-border bg-dark-card">
-        <div className="flex items-center justify-between border-b border-dark-border px-6 py-4">
+      <div className="mb-6 rounded-xl border border-border-default bg-bg-surface">
+        <div className="flex items-center justify-between border-b border-border-default px-6 py-4">
           <div className="flex items-center gap-2">
             <Bot size={20} className="text-accent-purple" />
-            <h2 className="text-base font-semibold text-dark-text">系统 Agents</h2>
+            <h2 className="text-base font-semibold text-text-primary">系统 Agents</h2>
             <span className="ml-2 rounded-full bg-accent-purple/10 px-2 py-0.5 text-xs text-accent-purple">{systemAgents.length}</span>
           </div>
         </div>
@@ -101,7 +101,7 @@ export default function Dashboard() {
         {systemAgents.length > 0 ? (
           <table className="w-full">
             <thead>
-              <tr className="text-left text-xs text-dark-text-secondary">
+              <tr className="text-left text-xs text-text-secondary">
                 <th className="px-6 py-3 font-medium">Agent 名称</th>
                 <th className="px-4 py-3 font-medium">ID</th>
                 <th className="px-4 py-3 font-medium text-center">操作</th>
@@ -111,11 +111,11 @@ export default function Dashboard() {
               {systemAgents.map(agent => (
                 <tr
                   key={agent.id}
-                  className="border-t border-dark-border/50 hover:bg-dark-card-hover transition-colors"
+                  className="border-t border-border-default/50 hover:bg-bg-surface/50 transition-colors"
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-dark-bg">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-bg-base">
                         {agent.identity?.emoji ? (
                           <span className="text-lg">{agent.identity.emoji}</span>
                         ) : (
@@ -123,12 +123,12 @@ export default function Dashboard() {
                         )}
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-dark-text">{(agent as any).displayName || agent.name || agent.identity?.name || agent.id}</div>
-                        <div className="text-xs text-dark-text-secondary">系统 Agent</div>
+                        <div className="text-sm font-medium text-text-primary">{(agent as any).displayName || agent.name || agent.identity?.name || agent.id}</div>
+                        <div className="text-xs text-text-secondary">系统 Agent</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-sm text-dark-text-secondary">
+                  <td className="px-4 py-4 text-sm text-text-secondary">
                     {agent.id}
                   </td>
                   <td className="px-4 py-4 text-center">
@@ -139,14 +139,14 @@ export default function Dashboard() {
                           agentName: (agent as any).displayName || agent.name || agent.identity?.name || agent.id,
                           agentEmoji: agent.identity?.emoji,
                         })}
-                        className="rounded-lg border border-dark-border px-3 py-1 text-xs text-accent-blue hover:bg-accent-blue/10 transition-colors"
+                        className="rounded-lg border border-border-default px-3 py-1 text-xs text-accent-blue hover:bg-accent-blue/10 transition-colors"
                         title="对话"
                       >
                         <MessageSquare size={14} />
                       </button>
                       <button
                         onClick={() => navigate(`/agents/${agent.id}`)}
-                        className="rounded-lg border border-dark-border px-3 py-1 text-xs text-dark-text-secondary hover:bg-dark-card-hover hover:text-dark-text transition-colors"
+                        className="rounded-lg border border-border-default px-3 py-1 text-xs text-text-secondary hover:bg-bg-surface/50 hover:text-text-primary transition-colors"
                       >
                         查看
                       </button>
@@ -157,21 +157,21 @@ export default function Dashboard() {
             </tbody>
           </table>
         ) : (
-          <div className="px-6 py-8 text-center text-sm text-dark-text-secondary">暂无系统 Agents</div>
+          <div className="px-6 py-8 text-center text-sm text-text-secondary">暂无系统 Agents</div>
         )}
       </div>
 
       {/* User Agents Table */}
-      <div className="rounded-xl border border-dark-border bg-dark-card">
-        <div className="flex items-center justify-between border-b border-dark-border px-6 py-4">
+      <div className="rounded-xl border border-border-default bg-bg-surface">
+        <div className="flex items-center justify-between border-b border-border-default px-6 py-4">
           <div className="flex items-center gap-2">
             <Bot size={20} className="text-accent-blue" />
-            <h2 className="text-base font-semibold text-dark-text">用户 Agents</h2>
+            <h2 className="text-base font-semibold text-text-primary">用户 Agents</h2>
             <span className="ml-2 rounded-full bg-accent-blue/10 px-2 py-0.5 text-xs text-accent-blue">{userAgents.length}</span>
           </div>
           <button
             onClick={() => navigate('/agents')}
-            className="rounded-lg border border-dark-border px-3 py-1.5 text-xs text-dark-text-secondary hover:bg-dark-card-hover hover:text-dark-text transition-colors"
+            className="rounded-lg border border-border-default px-3 py-1.5 text-xs text-text-secondary hover:bg-bg-surface/50 hover:text-text-primary transition-colors"
           >
             查看全部
           </button>
@@ -180,7 +180,7 @@ export default function Dashboard() {
         {userAgents.length > 0 ? (
           <table className="w-full">
             <thead>
-              <tr className="text-left text-xs text-dark-text-secondary">
+              <tr className="text-left text-xs text-text-secondary">
                 <th className="px-6 py-3 font-medium">Agent 名称</th>
                 <th className="px-4 py-3 font-medium">ID</th>
                 <th className="px-4 py-3 font-medium text-center">操作</th>
@@ -190,21 +190,21 @@ export default function Dashboard() {
               {userAgents.map(agent => (
                 <tr
                   key={agent.id}
-                  className="border-t border-dark-border/50 hover:bg-dark-card-hover transition-colors"
+                  className="border-t border-border-default/50 hover:bg-bg-surface/50 transition-colors"
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-dark-bg">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-bg-base">
                         {agent.identity?.emoji ? (
                           <span className="text-lg">{agent.identity.emoji}</span>
                         ) : (
                           <Bot size={18} className="text-accent-blue" />
                         )}
                       </div>
-                      <div className="text-sm font-medium text-dark-text">{(agent as any).displayName || agent.name || agent.identity?.name || agent.id}</div>
+                      <div className="text-sm font-medium text-text-primary">{(agent as any).displayName || agent.name || agent.identity?.name || agent.id}</div>
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-sm text-dark-text-secondary">
+                  <td className="px-4 py-4 text-sm text-text-secondary">
                     {agent.id}
                   </td>
                   <td className="px-4 py-4 text-center">
@@ -215,14 +215,14 @@ export default function Dashboard() {
                           agentName: (agent as any).displayName || agent.name || agent.identity?.name || agent.id,
                           agentEmoji: agent.identity?.emoji,
                         })}
-                        className="rounded-lg border border-dark-border px-3 py-1 text-xs text-accent-blue hover:bg-accent-blue/10 transition-colors"
+                        className="rounded-lg border border-border-default px-3 py-1 text-xs text-accent-blue hover:bg-accent-blue/10 transition-colors"
                         title="对话"
                       >
                         <MessageSquare size={14} />
                       </button>
                       <button
                         onClick={() => navigate(`/agents/${agent.id}`)}
-                        className="rounded-lg border border-dark-border px-3 py-1 text-xs text-dark-text-secondary hover:bg-dark-card-hover hover:text-dark-text transition-colors"
+                        className="rounded-lg border border-border-default px-3 py-1 text-xs text-text-secondary hover:bg-bg-surface/50 hover:text-text-primary transition-colors"
                       >
                         查看
                       </button>
@@ -233,7 +233,7 @@ export default function Dashboard() {
             </tbody>
           </table>
         ) : (
-          <div className="px-6 py-8 text-center text-sm text-dark-text-secondary">暂无用户 Agents</div>
+          <div className="px-6 py-8 text-center text-sm text-text-secondary">暂无用户 Agents</div>
         )}
       </div>
     </div>

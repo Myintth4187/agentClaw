@@ -110,8 +110,8 @@ export default function CronJobs() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-dark-text">定时任务</h1>
-          <p className="mt-1 text-sm text-dark-text-secondary">
+          <h1 className="text-2xl font-bold text-text-primary">定时任务</h1>
+          <p className="mt-1 text-sm text-text-secondary">
             管理 Agent 的定时执行任务
           </p>
         </div>
@@ -119,7 +119,7 @@ export default function CronJobs() {
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="flex items-center gap-1.5 rounded-lg border border-dark-border px-3 py-1.5 text-xs text-dark-text-secondary hover:text-dark-text transition-colors"
+            className="flex items-center gap-1.5 rounded-lg border border-border-default px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors"
           >
             <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
             刷新
@@ -145,9 +145,9 @@ export default function CronJobs() {
       )}
 
       {jobs.length === 0 ? (
-        <div className="rounded-xl border border-dark-border bg-dark-card px-4 py-16 text-center">
-          <Clock size={40} className="mx-auto mb-3 text-dark-text-secondary/50" />
-          <p className="text-sm text-dark-text-secondary mb-3">暂无定时任务</p>
+        <div className="rounded-xl border border-border-default bg-bg-surface px-4 py-16 text-center">
+          <Clock size={40} className="mx-auto mb-3 text-text-secondary/50" />
+          <p className="text-sm text-text-secondary mb-3">暂无定时任务</p>
           <button
             onClick={() => setShowCreate(true)}
             className="inline-flex items-center gap-1.5 rounded-lg bg-accent-blue px-4 py-2 text-sm font-medium text-white hover:bg-accent-blue/90 transition-colors"
@@ -157,9 +157,9 @@ export default function CronJobs() {
           </button>
         </div>
       ) : (
-        <div className="rounded-xl border border-dark-border bg-dark-card overflow-hidden">
+        <div className="rounded-xl border border-border-default bg-bg-surface overflow-hidden">
           {/* Table header */}
-          <div className="grid grid-cols-[1fr_180px_140px_140px_120px] gap-2 border-b border-dark-border bg-dark-bg px-4 py-2 text-xs font-medium text-dark-text-secondary">
+          <div className="grid grid-cols-[1fr_180px_140px_140px_120px] gap-2 border-b border-border-default bg-bg-base px-4 py-2 text-xs font-medium text-text-secondary">
             <span>任务名称</span>
             <span>调度</span>
             <span>上次执行</span>
@@ -169,15 +169,15 @@ export default function CronJobs() {
 
           {jobs.map((job) => (
             <div key={job.id}>
-              <div className="grid grid-cols-[1fr_180px_140px_140px_120px] gap-2 items-center border-b border-dark-border px-4 py-3 hover:bg-dark-bg/50 transition-colors">
+              <div className="grid grid-cols-[1fr_180px_140px_140px_120px] gap-2 items-center border-b border-border-default px-4 py-3 hover:bg-bg-surface/50 transition-colors">
                 {/* Name + message */}
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className={`text-sm font-medium truncate ${job.enabled ? 'text-dark-text' : 'text-dark-text-secondary line-through'}`}>
+                    <span className={`text-sm font-medium truncate ${job.enabled ? 'text-text-primary' : 'text-text-secondary line-through'}`}>
                       {job.name || '未命名'}
                     </span>
                     {!job.enabled && (
-                      <span className="shrink-0 rounded bg-dark-bg px-1.5 py-0.5 text-[10px] text-dark-text-secondary">
+                      <span className="shrink-0 rounded bg-bg-base px-1.5 py-0.5 text-[10px] text-text-secondary">
                         已禁用
                       </span>
                     )}
@@ -187,7 +187,7 @@ export default function CronJobs() {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-dark-text-secondary truncate mt-0.5" title={job.message}>
+                  <p className="text-xs text-text-secondary truncate mt-0.5" title={job.message}>
                     {job.message}
                   </p>
                   {job.last_error && (
@@ -198,17 +198,17 @@ export default function CronJobs() {
                 </div>
 
                 {/* Schedule */}
-                <div className="text-xs text-dark-text-secondary truncate" title={job.schedule_display}>
+                <div className="text-xs text-text-secondary truncate" title={job.schedule_display}>
                   {job.schedule_display || job.schedule_expr || formatEveryMs(job.schedule_every_ms)}
                 </div>
 
                 {/* Last run */}
-                <div className="text-xs text-dark-text-secondary">
+                <div className="text-xs text-text-secondary">
                   {job.last_run_at_ms ? formatTime(job.last_run_at_ms) : '-'}
                 </div>
 
                 {/* Next run */}
-                <div className="text-xs text-dark-text-secondary">
+                <div className="text-xs text-text-secondary">
                   {job.next_run_at_ms ? formatTime(job.next_run_at_ms) : '-'}
                 </div>
 
@@ -217,7 +217,7 @@ export default function CronJobs() {
                   <button
                     onClick={() => handleToggle(job)}
                     disabled={togglingId === job.id}
-                    className="rounded-lg p-1.5 text-dark-text-secondary hover:text-dark-text hover:bg-dark-bg transition-colors disabled:opacity-50"
+                    className="rounded-lg p-1.5 text-text-secondary hover:text-text-primary hover:bg-bg-base transition-colors disabled:opacity-50"
                     title={job.enabled ? '禁用' : '启用'}
                   >
                     {togglingId === job.id ? (
@@ -231,7 +231,7 @@ export default function CronJobs() {
                   <button
                     onClick={() => handleRun(job)}
                     disabled={runningId === job.id || !job.enabled}
-                    className="rounded-lg p-1.5 text-dark-text-secondary hover:text-accent-blue hover:bg-accent-blue/10 transition-colors disabled:opacity-50"
+                    className="rounded-lg p-1.5 text-text-secondary hover:text-accent-blue hover:bg-accent-blue/10 transition-colors disabled:opacity-50"
                     title="立即执行"
                   >
                     {runningId === job.id ? (
@@ -242,7 +242,7 @@ export default function CronJobs() {
                   </button>
                   <button
                     onClick={() => setDeleteTarget(job)}
-                    className="rounded-lg p-1.5 text-dark-text-secondary hover:text-accent-red hover:bg-accent-red/10 transition-colors"
+                    className="rounded-lg p-1.5 text-text-secondary hover:text-accent-red hover:bg-accent-red/10 transition-colors"
                     title="删除"
                   >
                     <Trash2 size={15} />
@@ -265,15 +265,15 @@ export default function CronJobs() {
       {/* Delete confirmation */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="rounded-xl bg-dark-card border border-dark-border p-6 max-w-sm w-full mx-4 shadow-xl">
-            <h3 className="text-base font-semibold text-dark-text mb-2">确认删除</h3>
-            <p className="text-sm text-dark-text-secondary mb-4">
-              确定要删除定时任务 <span className="font-medium text-dark-text">{deleteTarget.name || deleteTarget.id}</span>？
+          <div className="rounded-xl bg-bg-surface border border-border-default p-6 max-w-sm w-full mx-4 shadow-xl">
+            <h3 className="text-base font-semibold text-text-primary mb-2">确认删除</h3>
+            <p className="text-sm text-text-secondary mb-4">
+              确定要删除定时任务 <span className="font-medium text-text-primary">{deleteTarget.name || deleteTarget.id}</span>？
             </p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="rounded-lg border border-dark-border px-4 py-1.5 text-sm text-dark-text-secondary hover:text-dark-text transition-colors"
+                className="rounded-lg border border-border-default px-4 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
               >
                 取消
               </button>
@@ -374,13 +374,13 @@ function CreateCronModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="rounded-xl bg-dark-card border border-dark-border max-w-lg w-full mx-4 shadow-xl max-h-[85vh] flex flex-col">
+      <div className="rounded-xl bg-bg-surface border border-border-default max-w-lg w-full mx-4 shadow-xl max-h-[85vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-dark-border shrink-0">
-          <h3 className="text-base font-semibold text-dark-text">新建定时任务</h3>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border-default shrink-0">
+          <h3 className="text-base font-semibold text-text-primary">新建定时任务</h3>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-dark-text-secondary hover:text-dark-text transition-colors"
+            className="rounded-lg p-1 text-text-secondary hover:text-text-primary transition-colors"
           >
             <X size={18} />
           </button>
@@ -397,7 +397,7 @@ function CreateCronModal({
 
           {/* Name */}
           <div>
-            <label className="block text-xs font-medium text-dark-text-secondary mb-1">
+            <label className="block text-xs font-medium text-text-secondary mb-1">
               任务名称 *
             </label>
             <input
@@ -405,13 +405,13 @@ function CreateCronModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="例：每日报告"
-              className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue placeholder:text-dark-text-secondary"
+              className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary"
             />
           </div>
 
           {/* Message */}
           <div>
-            <label className="block text-xs font-medium text-dark-text-secondary mb-1">
+            <label className="block text-xs font-medium text-text-secondary mb-1">
               任务消息 *
             </label>
             <textarea
@@ -419,16 +419,16 @@ function CreateCronModal({
               onChange={(e) => setMessage(e.target.value)}
               rows={3}
               placeholder="Agent 将收到的消息内容..."
-              className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue placeholder:text-dark-text-secondary resize-none"
+              className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary resize-none"
             />
-            <p className="mt-0.5 text-[11px] text-dark-text-secondary">
+            <p className="mt-0.5 text-[11px] text-text-secondary">
               定时触发时，此消息将作为用户输入发送给 Agent
             </p>
           </div>
 
           {/* Schedule type */}
           <div>
-            <label className="block text-xs font-medium text-dark-text-secondary mb-2">
+            <label className="block text-xs font-medium text-text-secondary mb-2">
               调度方式
             </label>
             <div className="flex gap-2">
@@ -443,7 +443,7 @@ function CreateCronModal({
                   className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                     scheduleType === type
                       ? 'bg-accent-blue text-white'
-                      : 'border border-dark-border text-dark-text-secondary hover:text-dark-text'
+                      : 'border border-border-default text-text-secondary hover:text-text-primary'
                   }`}
                 >
                   {label}
@@ -455,7 +455,7 @@ function CreateCronModal({
           {/* Schedule config */}
           {scheduleType === 'every' && (
             <div>
-              <label className="block text-xs font-medium text-dark-text-secondary mb-1">
+              <label className="block text-xs font-medium text-text-secondary mb-1">
                 间隔（秒）
               </label>
               <input
@@ -464,9 +464,9 @@ function CreateCronModal({
                 onChange={(e) => setEverySeconds(e.target.value)}
                 min={1}
                 placeholder="3600"
-                className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue placeholder:text-dark-text-secondary"
+                className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary"
               />
-              <p className="mt-0.5 text-[11px] text-dark-text-secondary">
+              <p className="mt-0.5 text-[11px] text-text-secondary">
                 {formatEveryMs(parseInt(everySeconds, 10) * 1000 || null)}
               </p>
             </div>
@@ -474,7 +474,7 @@ function CreateCronModal({
 
           {scheduleType === 'cron' && (
             <div>
-              <label className="block text-xs font-medium text-dark-text-secondary mb-1">
+              <label className="block text-xs font-medium text-text-secondary mb-1">
                 Cron 表达式
               </label>
               <input
@@ -482,9 +482,9 @@ function CreateCronModal({
                 value={cronExpr}
                 onChange={(e) => setCronExpr(e.target.value)}
                 placeholder="0 9 * * *"
-                className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text font-mono outline-none focus:border-accent-blue placeholder:text-dark-text-secondary"
+                className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary font-mono outline-none focus:border-accent-blue placeholder:text-text-secondary"
               />
-              <p className="mt-0.5 text-[11px] text-dark-text-secondary">
+              <p className="mt-0.5 text-[11px] text-text-secondary">
                 格式：分 时 日 月 周（例：0 9 * * * 表示每天 9:00）
               </p>
             </div>
@@ -492,30 +492,30 @@ function CreateCronModal({
 
           {scheduleType === 'once' && (
             <div>
-              <label className="block text-xs font-medium text-dark-text-secondary mb-1">
+              <label className="block text-xs font-medium text-text-secondary mb-1">
                 执行时间
               </label>
               <input
                 type="datetime-local"
                 value={atIso}
                 onChange={(e) => setAtIso(e.target.value)}
-                className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue"
+                className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue"
               />
             </div>
           )}
 
           {/* Deliver option */}
-          <div className="border-t border-dark-border pt-4">
+          <div className="border-t border-border-default pt-4">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={deliver}
                 onChange={(e) => setDeliver(e.target.checked)}
-                className="rounded border-dark-border"
+                className="rounded border-border-default"
               />
-              <span className="text-sm text-dark-text">发送到渠道</span>
+              <span className="text-sm text-text-primary">发送到渠道</span>
             </label>
-            <p className="mt-0.5 ml-5 text-[11px] text-dark-text-secondary">
+            <p className="mt-0.5 ml-5 text-[11px] text-text-secondary">
               勾选后，Agent 的回复将发送到指定渠道
             </p>
           </div>
@@ -523,7 +523,7 @@ function CreateCronModal({
           {deliver && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-dark-text-secondary mb-1">
+                <label className="block text-xs font-medium text-text-secondary mb-1">
                   渠道
                 </label>
                 <input
@@ -531,11 +531,11 @@ function CreateCronModal({
                   value={channel}
                   onChange={(e) => setChannel(e.target.value)}
                   placeholder="telegram, discord..."
-                  className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue placeholder:text-dark-text-secondary"
+                  className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-dark-text-secondary mb-1">
+                <label className="block text-xs font-medium text-text-secondary mb-1">
                   发送目标
                 </label>
                 <input
@@ -543,7 +543,7 @@ function CreateCronModal({
                   value={to}
                   onChange={(e) => setTo(e.target.value)}
                   placeholder="用户ID或群组ID"
-                  className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue placeholder:text-dark-text-secondary"
+                  className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary"
                 />
               </div>
             </div>
@@ -551,10 +551,10 @@ function CreateCronModal({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 px-5 py-3 border-t border-dark-border shrink-0">
+        <div className="flex justify-end gap-2 px-5 py-3 border-t border-border-default shrink-0">
           <button
             onClick={onClose}
-            className="rounded-lg border border-dark-border px-4 py-1.5 text-sm text-dark-text-secondary hover:text-dark-text transition-colors"
+            className="rounded-lg border border-border-default px-4 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
           >
             取消
           </button>

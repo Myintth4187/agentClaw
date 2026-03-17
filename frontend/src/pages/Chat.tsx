@@ -536,9 +536,9 @@ export default function Chat() {
   return (
     <div className="flex h-[calc(100vh-3rem)] -m-6">
       {/* Session sidebar */}
-      <div className="w-64 border-r border-dark-border bg-dark-sidebar flex flex-col shrink-0">
-        <div className="px-4 py-3 border-b border-dark-border flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-dark-text">会话</h2>
+      <div className="w-64 border-r border-border-default bg-bg-elevated flex flex-col shrink-0">
+        <div className="px-4 py-3 border-b border-border-default flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-text-primary">会话</h2>
           <button
             onClick={handleNewSession}
             className="flex items-center gap-1 rounded-lg bg-accent-blue px-2.5 py-1 text-xs font-medium text-white hover:bg-accent-blue/90 transition-colors"
@@ -554,7 +554,7 @@ export default function Chat() {
               <Loader2 size={18} className="animate-spin text-accent-blue" />
             </div>
           ) : sessions.length === 0 ? (
-            <div className="px-4 py-8 text-center text-xs text-dark-text-secondary">
+            <div className="px-4 py-8 text-center text-xs text-text-secondary">
               暂无会话
             </div>
           ) : (
@@ -566,7 +566,7 @@ export default function Chat() {
                   className={`w-full flex items-center gap-2 px-3 py-2.5 text-left transition-colors group ${
                     activeSessionKey === s.key
                       ? 'bg-accent-blue/10 text-accent-blue'
-                      : 'text-dark-text-secondary hover:bg-dark-card hover:text-dark-text'
+                      : 'text-text-secondary hover:bg-bg-surface hover:text-text-primary'
                   }`}
                 >
                   <MessageSquare size={14} className="shrink-0" />
@@ -574,13 +574,13 @@ export default function Chat() {
                     <div className="text-xs font-medium truncate">
                       {s.agentId ? getAgentDisplayName(s.agentId) : '未知 Agent'}
                     </div>
-                    <div className="text-[10px] text-dark-text-secondary truncate">
+                    <div className="text-[10px] text-text-secondary truncate">
                       {s.title || s.key.split(':').pop() || '新会话'}
                     </div>
                   </div>
                   <button
                     onClick={(e) => handleDeleteSession(s.key, e)}
-                    className="opacity-0 group-hover:opacity-100 text-dark-text-secondary hover:text-accent-red transition-all shrink-0"
+                    className="opacity-0 group-hover:opacity-100 text-text-secondary hover:text-accent-red transition-all shrink-0"
                   >
                     <Trash2 size={12} />
                   </button>
@@ -596,16 +596,16 @@ export default function Chat() {
         {activeSessionKey ? (
           <>
             {/* Chat header */}
-            <div className="px-5 py-3 border-b border-dark-border flex items-center justify-between shrink-0">
+            <div className="px-5 py-3 border-b border-border-default flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2 min-w-0">
                 <Bot size={16} className="text-accent-blue shrink-0" />
-                <span className="text-sm font-medium text-dark-text truncate">
+                <span className="text-sm font-medium text-text-primary truncate">
                   {getAgentDisplayName(getAgentIdFromKey(activeSessionKey))}
                 </span>
               </div>
               <button
                 onClick={handleRefresh}
-                className="text-dark-text-secondary hover:text-dark-text transition-colors"
+                className="text-text-secondary hover:text-text-primary transition-colors"
                 title="刷新"
               >
                 <RefreshCw size={14} />
@@ -619,7 +619,7 @@ export default function Chat() {
                   <Loader2 size={24} className="animate-spin text-accent-blue" />
                 </div>
               ) : messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-dark-text-secondary">
+                <div className="flex flex-col items-center justify-center py-20 text-text-secondary">
                   <MessageSquare size={40} className="mb-3 opacity-30" />
                   <p className="text-sm">发送消息开始对话</p>
                   <p className="text-xs mt-1 opacity-60">支持上传图片和文件附件</p>
@@ -640,7 +640,7 @@ export default function Chat() {
                         className={`rounded-xl px-4 py-2.5 max-w-[80%] ${
                           msg.role === 'user'
                             ? 'bg-accent-blue text-white'
-                            : 'bg-dark-card border border-dark-border text-dark-text'
+                            : 'bg-bg-surface border border-border-default text-text-primary'
                         }`}
                       >
                         <div className="text-sm whitespace-pre-wrap break-words">
@@ -648,7 +648,7 @@ export default function Chat() {
                         </div>
                         {msg.timestamp && (
                           <div className={`text-[10px] mt-1 ${
-                            msg.role === 'user' ? 'text-white/60' : 'text-dark-text-secondary'
+                            msg.role === 'user' ? 'text-white/60' : 'text-text-secondary'
                           }`}>
                             {formatTime(msg.timestamp)}
                           </div>
@@ -666,8 +666,8 @@ export default function Chat() {
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-blue/10 text-accent-blue mt-0.5">
                         <Bot size={14} />
                       </div>
-                      <div className="rounded-xl px-4 py-2.5 bg-dark-card border border-dark-border">
-                        <div className="flex items-center gap-2 text-sm text-dark-text-secondary">
+                      <div className="rounded-xl px-4 py-2.5 bg-bg-surface border border-border-default">
+                        <div className="flex items-center gap-2 text-sm text-text-secondary">
                           <Loader2 size={14} className="animate-spin" />
                           思考中...
                         </div>
@@ -695,7 +695,7 @@ export default function Chat() {
                   {pendingFiles.map(pf => (
                     <div
                       key={pf.id}
-                      className="relative group rounded-lg border border-dark-border bg-dark-card overflow-hidden"
+                      className="relative group rounded-lg border border-border-default bg-bg-surface overflow-hidden"
                     >
                       {pf.isImage && pf.previewUrl ? (
                         <div className="relative">
@@ -712,8 +712,8 @@ export default function Chat() {
                         <div className="h-16 w-auto flex items-center gap-2 px-3">
                           <FileText size={16} className="text-accent-blue shrink-0" />
                           <div className="min-w-0">
-                            <div className="text-xs text-dark-text truncate max-w-[120px]">{pf.name}</div>
-                            <div className="text-[10px] text-dark-text-secondary">{formatFileSize(pf.file.size)}</div>
+                            <div className="text-xs text-text-primary truncate max-w-[120px]">{pf.name}</div>
+                            <div className="text-[10px] text-text-secondary">{formatFileSize(pf.file.size)}</div>
                           </div>
                         </div>
                       )}
@@ -730,12 +730,12 @@ export default function Chat() {
             )}
 
             {/* Input */}
-            <div className="px-5 py-3 border-t border-dark-border shrink-0">
+            <div className="px-5 py-3 border-t border-border-default shrink-0">
               <div className="max-w-3xl mx-auto flex items-end gap-2">
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={sending}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-dark-border text-dark-text-secondary hover:text-accent-blue hover:border-accent-blue/30 transition-colors disabled:opacity-50"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border-default text-text-secondary hover:text-accent-blue hover:border-accent-blue/30 transition-colors disabled:opacity-50"
                   title="上传附件（图片/文件）"
                 >
                   <Paperclip size={16} />
@@ -755,7 +755,7 @@ export default function Chat() {
                   onPaste={handlePaste}
                   placeholder={pendingFiles.length > 0 ? '添加说明（可选）...' : '输入消息，可粘贴图片...'}
                   rows={1}
-                  className="flex-1 rounded-xl border border-dark-border bg-dark-card px-4 py-2.5 text-sm text-dark-text outline-none focus:border-accent-blue placeholder:text-dark-text-secondary resize-none max-h-32"
+                  className="flex-1 rounded-xl border border-border-default bg-bg-surface px-4 py-2.5 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary resize-none max-h-32"
                   style={{ minHeight: '40px' }}
                   disabled={sending}
                 />
@@ -770,7 +770,7 @@ export default function Chat() {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-dark-text-secondary">
+          <div className="flex-1 flex flex-col items-center justify-center text-text-secondary">
             <MessageSquare size={48} className="mb-4 opacity-20" />
             <p className="text-sm mb-4">选择一个会话或创建新会话</p>
             <button
@@ -787,12 +787,12 @@ export default function Chat() {
       {/* New session modal */}
       {showNewSession && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="rounded-xl bg-dark-card border border-dark-border max-w-md w-full mx-4 shadow-xl">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-dark-border">
-              <h3 className="text-base font-semibold text-dark-text">选择 Agent</h3>
+          <div className="rounded-xl bg-bg-surface border border-border-default max-w-md w-full mx-4 shadow-xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border-default">
+              <h3 className="text-base font-semibold text-text-primary">选择 Agent</h3>
               <button
                 onClick={() => setShowNewSession(false)}
-                className="text-dark-text-secondary hover:text-dark-text transition-colors text-lg"
+                className="text-text-secondary hover:text-text-primary transition-colors text-lg"
               >
                 ×
               </button>
@@ -803,7 +803,7 @@ export default function Chat() {
                   <Loader2 size={24} className="animate-spin text-accent-blue" />
                 </div>
               ) : agents.length === 0 ? (
-                <div className="text-center py-8 text-sm text-dark-text-secondary">
+                <div className="text-center py-8 text-sm text-text-secondary">
                   暂无可用 Agent
                 </div>
               ) : (
@@ -812,14 +812,14 @@ export default function Chat() {
                     <button
                       key={agent.id}
                       onClick={() => startNewSession(agent.id)}
-                      className="w-full flex items-center gap-3 rounded-xl border border-dark-border p-3 text-left hover:bg-dark-bg/50 hover:border-accent-blue/30 transition-colors group"
+                      className="w-full flex items-center gap-3 rounded-xl border border-border-default p-3 text-left hover:bg-bg-surface/50 hover:border-accent-blue/30 transition-colors group"
                     >
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-blue/10 text-lg">
                         {agent.identity?.emoji || '🤖'}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-dark-text truncate">
+                          <span className="text-sm font-medium text-text-primary truncate">
                             {agent.displayName || agent.identity?.name || agent.name || agent.id}
                           </span>
                           {agent.id === defaultAgentId && (
@@ -828,11 +828,11 @@ export default function Chat() {
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-dark-text-secondary truncate mt-0.5">
+                        <div className="text-xs text-text-secondary truncate mt-0.5">
                           {agent.id}
                         </div>
                       </div>
-                      <ChevronRight size={14} className="text-dark-text-secondary opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                      <ChevronRight size={14} className="text-text-secondary opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                     </button>
                   ))}
                 </div>

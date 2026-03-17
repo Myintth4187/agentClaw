@@ -225,8 +225,8 @@ export default function KnowledgeBase() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-dark-text">知识库</h1>
-        <p className="mt-1 text-sm text-dark-text-secondary">
+        <h1 className="text-2xl font-bold text-text-primary">知识库</h1>
+        <p className="mt-1 text-sm text-text-secondary">
           管理每个 Agent 的知识库文件，支持上传文档、PDF、数据文件等
         </p>
       </div>
@@ -237,17 +237,17 @@ export default function KnowledgeBase() {
 
       {/* Agent selector */}
       <div className="mb-4 flex items-center gap-4">
-        <label className="text-sm font-medium text-dark-text">选择 Agent：</label>
+        <label className="text-sm font-medium text-text-primary">选择 Agent：</label>
         {agentsLoading ? (
           <Loader2 size={16} className="animate-spin text-accent-blue" />
         ) : agents.length === 0 ? (
-          <span className="text-sm text-dark-text-secondary">暂无 Agent</span>
+          <span className="text-sm text-text-secondary">暂无 Agent</span>
         ) : (
           <div className="flex items-center gap-2">
             <select
               value={selectedAgent}
               onChange={e => setSelectedAgent(e.target.value)}
-              className="rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue"
+              className="rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue"
             >
               {agents.map(a => (
                 <option key={a.id} value={a.id}>
@@ -257,7 +257,7 @@ export default function KnowledgeBase() {
             </select>
             <button
               onClick={() => loadDir(subPath)}
-              className="flex items-center gap-1 rounded-lg border border-dark-border px-3 py-2 text-xs text-dark-text-secondary hover:text-dark-text transition-colors"
+              className="flex items-center gap-1 rounded-lg border border-border-default px-3 py-2 text-xs text-text-secondary hover:text-text-primary transition-colors"
               title="刷新"
             >
               <RefreshCw size={14} />
@@ -275,7 +275,7 @@ export default function KnowledgeBase() {
             <div className="flex items-center gap-1 text-sm">
               <button
                 onClick={() => navigateTo('')}
-                className="flex items-center gap-1 text-dark-text-secondary hover:text-accent-blue transition-colors"
+                className="flex items-center gap-1 text-text-secondary hover:text-accent-blue transition-colors"
                 title={`~/.openclaw/${knowledgeRoot(selectedAgent)}`}
               >
                 <BookOpen size={15} />
@@ -286,13 +286,13 @@ export default function KnowledgeBase() {
                 const isLast = i === breadcrumbs.length - 1
                 return (
                   <span key={segPath} className="flex items-center gap-1">
-                    <ChevronRight size={14} className="text-dark-text-secondary" />
+                    <ChevronRight size={14} className="text-text-secondary" />
                     {isLast ? (
-                      <span className="text-dark-text font-medium">{seg}</span>
+                      <span className="text-text-primary font-medium">{seg}</span>
                     ) : (
                       <button
                         onClick={() => navigateTo(segPath)}
-                        className="text-dark-text-secondary hover:text-accent-blue transition-colors"
+                        className="text-text-secondary hover:text-accent-blue transition-colors"
                       >
                         {seg}
                       </button>
@@ -307,7 +307,7 @@ export default function KnowledgeBase() {
               {subPath && (
                 <button
                   onClick={goUp}
-                  className="flex items-center gap-1 rounded-lg border border-dark-border px-3 py-1.5 text-xs text-dark-text-secondary hover:text-dark-text transition-colors"
+                  className="flex items-center gap-1 rounded-lg border border-border-default px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors"
                 >
                   <ArrowLeft size={14} />
                   返回上级
@@ -315,7 +315,7 @@ export default function KnowledgeBase() {
               )}
               <button
                 onClick={() => setShowNewFolder(true)}
-                className="flex items-center gap-1 rounded-lg border border-dark-border px-3 py-1.5 text-xs text-dark-text-secondary hover:text-dark-text transition-colors"
+                className="flex items-center gap-1 rounded-lg border border-border-default px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors"
               >
                 <FolderPlus size={14} />
                 新建文件夹
@@ -344,14 +344,14 @@ export default function KnowledgeBase() {
                 onChange={e => setNewFolderName(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleNewFolder(); if (e.key === 'Escape') setShowNewFolder(false) }}
                 placeholder="文件夹名称..."
-                className="rounded-lg border border-dark-border bg-dark-bg px-3 py-1.5 text-sm text-dark-text outline-none focus:border-accent-blue placeholder:text-dark-text-secondary"
+                className="rounded-lg border border-border-default bg-bg-base px-3 py-1.5 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary"
               />
               <button onClick={handleNewFolder} className="rounded-lg bg-accent-blue px-3 py-1.5 text-xs font-medium text-white">
                 创建
               </button>
               <button
                 onClick={() => { setShowNewFolder(false); setNewFolderName('') }}
-                className="rounded-lg border border-dark-border px-3 py-1.5 text-xs text-dark-text-secondary"
+                className="rounded-lg border border-border-default px-3 py-1.5 text-xs text-text-secondary"
               >
                 取消
               </button>
@@ -359,8 +359,8 @@ export default function KnowledgeBase() {
           )}
 
           {/* Knowledge path hint */}
-          <div className="mb-4 rounded-lg bg-accent-blue/5 border border-accent-blue/10 px-4 py-2.5 text-xs text-dark-text-secondary">
-            知识库路径：<code className="rounded bg-dark-bg px-1.5 py-0.5 text-accent-blue">~/.openclaw/{knowledgeRoot(selectedAgent)}{subPath ? `/${subPath}` : ''}</code>
+          <div className="mb-4 rounded-lg bg-accent-blue/5 border border-accent-blue/10 px-4 py-2.5 text-xs text-text-secondary">
+            知识库路径：<code className="rounded bg-bg-base px-1.5 py-0.5 text-accent-blue">~/.openclaw/{knowledgeRoot(selectedAgent)}{subPath ? `/${subPath}` : ''}</code>
             <span className="ml-2">— Agent 可在对话中引用此目录下的文件</span>
           </div>
 
@@ -370,9 +370,9 @@ export default function KnowledgeBase() {
               <Loader2 size={28} className="animate-spin text-accent-blue" />
             </div>
           ) : (
-            <div className="rounded-xl border border-dark-border bg-dark-card overflow-hidden">
+            <div className="rounded-xl border border-border-default bg-bg-surface overflow-hidden">
               {/* Table header */}
-              <div className="grid grid-cols-[1fr_100px_160px_100px] gap-2 border-b border-dark-border bg-dark-bg px-4 py-2 text-xs font-medium text-dark-text-secondary">
+              <div className="grid grid-cols-[1fr_100px_160px_100px] gap-2 border-b border-border-default bg-bg-base px-4 py-2 text-xs font-medium text-text-secondary">
                 <span>名称</span>
                 <span className="text-right">大小</span>
                 <span className="text-right">修改时间</span>
@@ -389,30 +389,30 @@ export default function KnowledgeBase() {
                     const entrySubPath = entry.path.replace(knowledgeRoot(selectedAgent) + '/', '')
                     return (
                       <div key={entry.path}>
-                        <div className="grid grid-cols-[1fr_100px_160px_100px] gap-2 items-center border-b border-dark-border px-4 py-2 hover:bg-dark-bg/50 transition-colors">
+                        <div className="grid grid-cols-[1fr_100px_160px_100px] gap-2 items-center border-b border-border-default px-4 py-2 hover:bg-bg-surface/50 transition-colors">
                           {/* Name */}
                           <button
                             onClick={() => isDir ? navigateTo(entrySubPath) : (isTextFile(entry) ? handlePreview(entry) : undefined)}
                             className={`flex items-center gap-2 text-sm text-left ${
                               isDir
                                 ? 'text-accent-blue hover:underline'
-                                : isTextFile(entry) ? 'text-dark-text hover:text-accent-blue' : 'text-dark-text cursor-default'
+                                : isTextFile(entry) ? 'text-text-primary hover:text-accent-blue' : 'text-text-primary cursor-default'
                             }`}
                           >
                             {isDir
                               ? <Folder size={16} className="shrink-0 text-accent-yellow" />
-                              : <FileText size={16} className="shrink-0 text-dark-text-secondary" />
+                              : <FileText size={16} className="shrink-0 text-text-secondary" />
                             }
                             <span className="truncate">{entry.name}</span>
                           </button>
 
                           {/* Size */}
-                          <span className="text-right text-xs text-dark-text-secondary">
+                          <span className="text-right text-xs text-text-secondary">
                             {isDir ? '-' : formatSize(entry.size)}
                           </span>
 
                           {/* Modified */}
-                          <span className="text-right text-xs text-dark-text-secondary">
+                          <span className="text-right text-xs text-text-secondary">
                             {formatDate(entry.modified)}
                           </span>
 
@@ -421,7 +421,7 @@ export default function KnowledgeBase() {
                             {!isDir && (
                               <button
                                 onClick={() => handleDownload(entry)}
-                                className="text-dark-text-secondary hover:text-accent-blue transition-colors"
+                                className="text-text-secondary hover:text-accent-blue transition-colors"
                                 title="下载"
                               >
                                 <Download size={14} />
@@ -430,7 +430,7 @@ export default function KnowledgeBase() {
                             <button
                               onClick={() => handleDelete(entry)}
                               disabled={isDeleting}
-                              className="text-dark-text-secondary hover:text-accent-red transition-colors disabled:opacity-50"
+                              className="text-text-secondary hover:text-accent-red transition-colors disabled:opacity-50"
                               title="删除"
                             >
                               {isDeleting
@@ -443,14 +443,14 @@ export default function KnowledgeBase() {
 
                         {/* File preview */}
                         {isPreviewing && previewFile && (
-                          <div className="border-b border-dark-border bg-dark-bg/30 px-4 py-3">
+                          <div className="border-b border-border-default bg-bg-base/30 px-4 py-3">
                             {previewLoading ? (
-                              <div className="flex items-center gap-2 text-sm text-dark-text-secondary">
+                              <div className="flex items-center gap-2 text-sm text-text-secondary">
                                 <Loader2 size={14} className="animate-spin" />
                                 加载中...
                               </div>
                             ) : (
-                              <pre className="whitespace-pre-wrap rounded-lg bg-dark-bg p-4 text-xs text-dark-text leading-relaxed font-mono max-h-80 overflow-y-auto">
+                              <pre className="whitespace-pre-wrap rounded-lg bg-bg-base p-4 text-xs text-text-primary leading-relaxed font-mono max-h-80 overflow-y-auto">
                                 {previewFile.content}
                               </pre>
                             )}
@@ -461,8 +461,8 @@ export default function KnowledgeBase() {
                   })}
                 </div>
               ) : (
-                <div className="px-4 py-12 text-center text-sm text-dark-text-secondary">
-                  <BookOpen size={32} className="mx-auto mb-3 text-dark-text-secondary/50" />
+                <div className="px-4 py-12 text-center text-sm text-text-secondary">
+                  <BookOpen size={32} className="mx-auto mb-3 text-text-secondary/50" />
                   <p>知识库为空</p>
                   <p className="mt-1 text-xs">上传文档、PDF、数据文件等，Agent 可在对话中引用</p>
                 </div>

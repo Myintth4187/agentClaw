@@ -150,31 +150,31 @@ export default function ApiAccess() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-bold text-dark-text">API 访问</h1>
-        <p className="mt-1 text-sm text-dark-text-secondary">
+        <h1 className="text-2xl font-bold text-text-primary">API 访问</h1>
+        <p className="mt-1 text-sm text-text-secondary">
           生成 API Token，通过 Python 脚本调用 Agent
         </p>
       </div>
 
       {/* Token Section */}
-      <div className="rounded-xl border border-dark-border bg-dark-card p-6">
+      <div className="rounded-xl border border-border-default bg-bg-surface p-6">
         <div className="flex items-center gap-3 mb-4">
           <Key size={20} className="text-accent-blue" />
-          <h2 className="text-lg font-semibold text-dark-text">API Token</h2>
+          <h2 className="text-lg font-semibold text-text-primary">API Token</h2>
         </div>
-        <p className="text-sm text-dark-text-secondary mb-4">
+        <p className="text-sm text-text-secondary mb-4">
           API Token 有效期 365 天，用于程序化调用 Agent。
         </p>
 
         {token ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <code className="flex-1 rounded-lg bg-dark-bg px-4 py-3 text-sm text-green-400 font-mono break-all border border-dark-border">
+              <code className="flex-1 rounded-lg bg-bg-base px-4 py-3 text-sm text-green-400 font-mono break-all border border-border-default">
                 {token}
               </code>
               <button
                 onClick={() => copyToClipboard(token, 'token')}
-                className="shrink-0 rounded-lg bg-dark-bg border border-dark-border px-3 py-3 text-dark-text-secondary hover:text-dark-text transition-colors"
+                className="shrink-0 rounded-lg bg-bg-base border border-border-default px-3 py-3 text-text-secondary hover:text-text-primary transition-colors"
                 title="复制"
               >
                 {copied === 'token' ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
@@ -185,7 +185,7 @@ export default function ApiAccess() {
               <button
                 onClick={handleGenerate}
                 disabled={loading}
-                className="ml-auto flex items-center gap-1.5 text-xs text-dark-text-secondary hover:text-dark-text transition-colors"
+                className="ml-auto flex items-center gap-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors"
               >
                 <RefreshCw size={14} />
                 重新生成
@@ -204,45 +204,45 @@ export default function ApiAccess() {
       </div>
 
       {/* CLI Usage */}
-      <div className="rounded-xl border border-dark-border bg-dark-card p-6">
+      <div className="rounded-xl border border-border-default bg-bg-surface p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-dark-text">命令行调用</h2>
+          <h2 className="text-lg font-semibold text-text-primary">命令行调用</h2>
           <button
             onClick={() => copyToClipboard(CLI_EXAMPLE, 'cli')}
-            className="flex items-center gap-1.5 rounded-lg bg-dark-bg border border-dark-border px-3 py-1.5 text-xs text-dark-text-secondary hover:text-dark-text transition-colors"
+            className="flex items-center gap-1.5 rounded-lg bg-bg-base border border-border-default px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors"
           >
             {copied === 'cli' ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
             复制
           </button>
         </div>
-        <p className="text-sm text-dark-text-secondary mb-3">
+        <p className="text-sm text-text-secondary mb-3">
           项目根目录下的 <code className="text-accent-blue">call_agent_api.py</code> 可直接使用：
         </p>
-        <pre className="rounded-lg bg-dark-bg border border-dark-border p-4 text-sm text-dark-text-secondary font-mono overflow-x-auto leading-relaxed">
+        <pre className="rounded-lg bg-bg-base border border-border-default p-4 text-sm text-text-secondary font-mono overflow-x-auto leading-relaxed">
           {CLI_EXAMPLE}
         </pre>
       </div>
 
       {/* Python Example */}
-      <div className="rounded-xl border border-dark-border bg-dark-card p-6">
+      <div className="rounded-xl border border-border-default bg-bg-surface p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-dark-text">Python 调用示例</h2>
+          <h2 className="text-lg font-semibold text-text-primary">Python 调用示例</h2>
           <button
             onClick={() => copyToClipboard(AGENT_EXAMPLE, 'agent')}
-            className="flex items-center gap-1.5 rounded-lg bg-dark-bg border border-dark-border px-3 py-1.5 text-xs text-dark-text-secondary hover:text-dark-text transition-colors"
+            className="flex items-center gap-1.5 rounded-lg bg-bg-base border border-border-default px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors"
           >
             {copied === 'agent' ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
             复制代码
           </button>
         </div>
-        <p className="text-sm text-dark-text-secondary mb-3">
+        <p className="text-sm text-text-secondary mb-3">
           发送消息给 Agent 并等待回复，可集成到自己的 Python 项目中。
         </p>
-        <div className="text-xs text-dark-text-secondary mb-2 font-mono">
+        <div className="text-xs text-text-secondary mb-2 font-mono">
           端点: <code className="text-accent-blue">POST /api/openclaw/sessions/:key/messages</code>
           &nbsp;|&nbsp; 认证: <code className="text-accent-blue">Bearer {'<API_TOKEN>'}</code>
         </div>
-        <pre className="rounded-lg bg-dark-bg border border-dark-border p-4 text-sm text-dark-text-secondary font-mono overflow-x-auto max-h-[500px] overflow-y-auto leading-relaxed">
+        <pre className="rounded-lg bg-bg-base border border-border-default p-4 text-sm text-text-secondary font-mono overflow-x-auto max-h-[500px] overflow-y-auto leading-relaxed">
           {AGENT_EXAMPLE}
         </pre>
       </div>

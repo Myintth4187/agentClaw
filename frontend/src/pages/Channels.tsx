@@ -207,15 +207,15 @@ export default function Channels() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-dark-text">渠道管理</h1>
-          <p className="mt-1 text-sm text-dark-text-secondary">
+          <h1 className="text-2xl font-bold text-text-primary">渠道管理</h1>
+          <p className="mt-1 text-sm text-text-secondary">
             管理 AI Agent 的消息接入渠道
           </p>
         </div>
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="flex items-center gap-1.5 rounded-lg border border-dark-border px-3 py-1.5 text-xs text-dark-text-secondary hover:text-dark-text transition-colors"
+          className="flex items-center gap-1.5 rounded-lg border border-border-default px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors"
         >
           <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
           刷新
@@ -232,7 +232,7 @@ export default function Channels() {
       {/* Configured channels */}
       {configuredChannels.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-sm font-semibold text-dark-text-secondary uppercase tracking-wider mb-3">
+          <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">
             已接入渠道
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -246,23 +246,23 @@ export default function Channels() {
               return (
                 <div
                   key={channelId}
-                  className="rounded-xl border border-dark-border bg-dark-card overflow-hidden"
+                  className="rounded-xl border border-border-default bg-bg-surface overflow-hidden"
                 >
                   {/* Channel header */}
                   <div className="flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-dark-bg text-xl">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-bg-base text-xl">
                         {icon}
                       </div>
                       <div>
-                        <div className="text-sm font-semibold text-dark-text">{label}</div>
+                        <div className="text-sm font-semibold text-text-primary">{label}</div>
                         <div className="flex items-center gap-2 mt-0.5">
                           {accounts.length > 0 ? (
                             accounts.map((acc) => (
                               <AccountStatusBadge key={acc.accountId} account={acc} />
                             ))
                           ) : (
-                            <span className="flex items-center gap-1 text-xs text-dark-text-secondary">
+                            <span className="flex items-center gap-1 text-xs text-text-secondary">
                               <span className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400" />
                               已配置（需重启网关生效）
                             </span>
@@ -273,21 +273,21 @@ export default function Channels() {
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => openConfig(channelId)}
-                        className="rounded-lg p-1.5 text-dark-text-secondary hover:text-dark-text hover:bg-dark-bg transition-colors"
+                        className="rounded-lg p-1.5 text-text-secondary hover:text-text-primary hover:bg-bg-base transition-colors"
                         title="配置"
                       >
                         <Settings size={15} />
                       </button>
                       <button
                         onClick={() => setExpandedChannel(isExpanded ? null : channelId)}
-                        className="rounded-lg p-1.5 text-dark-text-secondary hover:text-dark-text hover:bg-dark-bg transition-colors"
+                        className="rounded-lg p-1.5 text-text-secondary hover:text-text-primary hover:bg-bg-base transition-colors"
                         title="详情"
                       >
                         {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                       </button>
                       <button
                         onClick={() => setDeleteTarget(channelId)}
-                        className="rounded-lg p-1.5 text-dark-text-secondary hover:text-accent-red hover:bg-accent-red/10 transition-colors"
+                        className="rounded-lg p-1.5 text-text-secondary hover:text-accent-red hover:bg-accent-red/10 transition-colors"
                         title="删除"
                       >
                         <Trash2 size={15} />
@@ -297,7 +297,7 @@ export default function Channels() {
 
                   {/* Expanded account details */}
                   {isExpanded && (
-                    <div className="border-t border-dark-border bg-dark-bg/30 px-4 py-3">
+                    <div className="border-t border-border-default bg-bg-base/30 px-4 py-3">
                       {accounts.map((acc) => (
                         <AccountDetail key={acc.accountId} account={acc} />
                       ))}
@@ -313,7 +313,7 @@ export default function Channels() {
       {/* Available channels (not yet configured) */}
       {availableChannels.length > 0 && (
         <div>
-          <h2 className="text-sm font-semibold text-dark-text-secondary uppercase tracking-wider mb-3">
+          <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">
             可用渠道
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -321,18 +321,18 @@ export default function Channels() {
               <button
                 key={ch.id}
                 onClick={() => openConfig(ch.id)}
-                className="flex items-center gap-3 rounded-xl border border-dark-border bg-dark-card p-4 text-left hover:bg-dark-bg/50 transition-colors group"
+                className="flex items-center gap-3 rounded-xl border border-border-default bg-bg-surface p-4 text-left hover:bg-bg-surface/50 transition-colors group"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-dark-bg text-xl opacity-50 group-hover:opacity-80 transition-opacity">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-bg-base text-xl opacity-50 group-hover:opacity-80 transition-opacity">
                   {ch.icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-dark-text">{ch.label}</div>
-                  <div className="text-xs text-dark-text-secondary mt-0.5 truncate">
+                  <div className="text-sm font-semibold text-text-primary">{ch.label}</div>
+                  <div className="text-xs text-text-secondary mt-0.5 truncate">
                     {ch.description}
                   </div>
                 </div>
-                <Plus size={16} className="text-dark-text-secondary opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Plus size={16} className="text-text-secondary opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
             ))}
           </div>
@@ -341,7 +341,7 @@ export default function Channels() {
 
       {/* No channels at all (shouldn't happen with static catalog, but just in case) */}
       {configuredChannels.length === 0 && availableChannels.length === 0 && !error && (
-        <div className="text-center py-20 text-dark-text-secondary text-sm">
+        <div className="text-center py-20 text-text-secondary text-sm">
           加载中...
         </div>
       )}
@@ -363,15 +363,15 @@ export default function Channels() {
       {/* Delete confirmation */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="rounded-xl bg-dark-card border border-dark-border p-6 max-w-sm w-full mx-4 shadow-xl">
-            <h3 className="text-base font-semibold text-dark-text mb-2">确认删除</h3>
-            <p className="text-sm text-dark-text-secondary mb-4">
-              确定要删除渠道 <span className="font-medium text-dark-text">{channelLabels[deleteTarget] || CHANNEL_CATALOG.find((c) => c.id === deleteTarget)?.label || deleteTarget}</span> 的配置？此操作不可撤销。
+          <div className="rounded-xl bg-bg-surface border border-border-default p-6 max-w-sm w-full mx-4 shadow-xl">
+            <h3 className="text-base font-semibold text-text-primary mb-2">确认删除</h3>
+            <p className="text-sm text-text-secondary mb-4">
+              确定要删除渠道 <span className="font-medium text-text-primary">{channelLabels[deleteTarget] || CHANNEL_CATALOG.find((c) => c.id === deleteTarget)?.label || deleteTarget}</span> 的配置？此操作不可撤销。
             </p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="rounded-lg border border-dark-border px-4 py-1.5 text-sm text-dark-text-secondary hover:text-dark-text transition-colors"
+                className="rounded-lg border border-border-default px-4 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
               >
                 取消
               </button>
@@ -417,7 +417,7 @@ function AccountStatusBadge({ account }: { account: ChannelAccountSnapshot }) {
   }
 
   return (
-    <span className="flex items-center gap-1 text-xs text-dark-text-secondary">
+    <span className="flex items-center gap-1 text-xs text-text-secondary">
       <span className={`inline-block w-1.5 h-1.5 rounded-full ${color}`} />
       {account.name || account.accountId}: {label}
     </span>
@@ -444,8 +444,8 @@ function AccountDetail({ account }: { account: ChannelAccountSnapshot }) {
       <div className="grid grid-cols-[120px_1fr] gap-x-3 gap-y-1 text-xs">
         {fields.map(([label, value]) => (
           <div key={label as string} className="contents">
-            <span className="text-dark-text-secondary font-medium">{label as string}</span>
-            <span className={`text-dark-text truncate ${label === '错误' ? 'text-accent-red' : ''}`}>
+            <span className="text-text-secondary font-medium">{label as string}</span>
+            <span className={`text-text-primary truncate ${label === '错误' ? 'text-accent-red' : ''}`}>
               {String(value)}
             </span>
           </div>
@@ -505,18 +505,18 @@ function ChannelConfigModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="rounded-xl bg-dark-card border border-dark-border max-w-lg w-full mx-4 shadow-xl max-h-[80vh] flex flex-col">
+      <div className="rounded-xl bg-bg-surface border border-border-default max-w-lg w-full mx-4 shadow-xl max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-dark-border shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border-default shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-xl">{CHANNEL_ICONS[channelType] || '💬'}</span>
-            <h3 className="text-base font-semibold text-dark-text">
+            <h3 className="text-base font-semibold text-text-primary">
               配置 {channelLabel}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-dark-text-secondary hover:text-dark-text transition-colors"
+            className="rounded-lg p-1 text-text-secondary hover:text-text-primary transition-colors"
           >
             <X size={18} />
           </button>
@@ -530,14 +530,14 @@ function ChannelConfigModal({
             </div>
           ) : rawMode ? (
             <div>
-              <label className="block text-xs font-medium text-dark-text-secondary mb-1">
+              <label className="block text-xs font-medium text-text-secondary mb-1">
                 JSON 配置
               </label>
               <textarea
                 value={rawJson}
                 onChange={(e) => setRawJson(e.target.value)}
                 rows={12}
-                className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text font-mono outline-none focus:border-accent-blue placeholder:text-dark-text-secondary resize-none"
+                className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary font-mono outline-none focus:border-accent-blue placeholder:text-text-secondary resize-none"
                 placeholder="{}"
               />
               {knownFields && (
@@ -553,7 +553,7 @@ function ChannelConfigModal({
             <div className="space-y-4">
               {knownFields?.map((field) => (
                 <div key={field.key}>
-                  <label className="block text-xs font-medium text-dark-text-secondary mb-1">
+                  <label className="block text-xs font-medium text-text-secondary mb-1">
                     {field.label}
                   </label>
                   {field.type === 'boolean' ? (
@@ -562,9 +562,9 @@ function ChannelConfigModal({
                         type="checkbox"
                         checked={!!configData[field.key]}
                         onChange={(e) => updateField(field.key, e.target.checked)}
-                        className="rounded border-dark-border"
+                        className="rounded border-border-default"
                       />
-                      <span className="text-sm text-dark-text">
+                      <span className="text-sm text-text-primary">
                         {configData[field.key] ? '启用' : '禁用'}
                       </span>
                     </label>
@@ -586,11 +586,11 @@ function ChannelConfigModal({
                         }
                       }}
                       placeholder={field.hint}
-                      className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue placeholder:text-dark-text-secondary"
+                      className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary"
                     />
                   )}
                   {field.hint && field.type !== 'boolean' && (
-                    <p className="mt-0.5 text-[11px] text-dark-text-secondary">{field.hint}</p>
+                    <p className="mt-0.5 text-[11px] text-text-secondary">{field.hint}</p>
                   )}
                 </div>
               ))}
@@ -608,10 +608,10 @@ function ChannelConfigModal({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 px-5 py-3 border-t border-dark-border shrink-0">
+        <div className="flex justify-end gap-2 px-5 py-3 border-t border-border-default shrink-0">
           <button
             onClick={onClose}
-            className="rounded-lg border border-dark-border px-4 py-1.5 text-sm text-dark-text-secondary hover:text-dark-text transition-colors"
+            className="rounded-lg border border-border-default px-4 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
           >
             取消
           </button>

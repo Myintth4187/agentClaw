@@ -116,13 +116,13 @@ export default function ChatDrawer({ agentId, agentName, agentEmoji, onClose }: 
 
   return (
     <div
-      className="fixed inset-y-0 right-0 z-50 flex w-[420px] flex-col border-l border-dark-border bg-dark-sidebar shadow-2xl"
+      className="fixed inset-y-0 right-0 z-50 flex w-[420px] flex-col border-l border-border-default bg-bg-elevated shadow-floating"
       style={{ animation: 'slideInRight 0.2s ease-out' }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-dark-border px-4 py-3">
+      <div className="flex items-center justify-between border-b border-border-default px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-dark-bg">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-bg-surface">
             {agentEmoji ? (
               <span className="text-base">{agentEmoji}</span>
             ) : (
@@ -130,13 +130,13 @@ export default function ChatDrawer({ agentId, agentName, agentEmoji, onClose }: 
             )}
           </div>
           <div>
-            <div className="text-sm font-semibold text-dark-text">{agentName}</div>
-            <div className="text-xs text-dark-text-secondary">在线对话</div>
+            <div className="text-sm font-semibold text-text-primary">{agentName}</div>
+            <div className="text-xs text-text-secondary">在线对话</div>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="rounded-lg p-1.5 text-dark-text-secondary hover:bg-dark-card hover:text-dark-text transition-colors"
+          className="rounded-lg p-1.5 text-text-secondary hover:bg-bg-surface hover:text-text-primary transition-colors"
         >
           <X size={18} />
         </button>
@@ -146,10 +146,10 @@ export default function ChatDrawer({ agentId, agentName, agentEmoji, onClose }: 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {loading ? (
           <div className="flex items-center justify-center py-10">
-            <Loader2 size={24} className="animate-spin text-dark-text-secondary" />
+            <Loader2 size={24} className="animate-spin text-text-secondary" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-10 text-dark-text-secondary">
+          <div className="flex flex-col items-center justify-center py-10 text-text-secondary">
             <Bot size={40} className="mb-3 opacity-50" />
             <p className="text-sm">开始与 {agentName} 对话</p>
           </div>
@@ -160,7 +160,7 @@ export default function ChatDrawer({ agentId, agentName, agentEmoji, onClose }: 
               className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
             >
               <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
-                msg.role === 'user' ? 'bg-accent-blue' : 'bg-dark-bg'
+                msg.role === 'user' ? 'bg-accent-blue' : 'bg-bg-surface'
               }`}>
                 {msg.role === 'user' ? (
                   <User size={14} className="text-white" />
@@ -174,7 +174,7 @@ export default function ChatDrawer({ agentId, agentName, agentEmoji, onClose }: 
                 className={`max-w-[80%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
                   msg.role === 'user'
                     ? 'bg-accent-blue text-white'
-                    : 'bg-dark-card text-dark-text border border-dark-border'
+                    : 'bg-bg-surface text-text-primary border border-border-default'
                 }`}
               >
                 <div className="whitespace-pre-wrap break-words">{msg.content}</div>
@@ -186,18 +186,18 @@ export default function ChatDrawer({ agentId, agentName, agentEmoji, onClose }: 
         {/* Typing indicator */}
         {sending && (
           <div className="flex gap-3">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-dark-bg">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-bg-surface">
               {agentEmoji ? (
                 <span className="text-xs">{agentEmoji}</span>
               ) : (
                 <Bot size={14} className="text-accent-blue" />
               )}
             </div>
-            <div className="rounded-xl bg-dark-card border border-dark-border px-3.5 py-2.5">
+            <div className="rounded-xl bg-bg-surface border border-border-default px-3.5 py-2.5">
               <div className="flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-dark-text-secondary animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="h-1.5 w-1.5 rounded-full bg-dark-text-secondary animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="h-1.5 w-1.5 rounded-full bg-dark-text-secondary animate-bounce" style={{ animationDelay: '300ms' }} />
+                <span className="h-1.5 w-1.5 rounded-full bg-text-secondary animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="h-1.5 w-1.5 rounded-full bg-text-secondary animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="h-1.5 w-1.5 rounded-full bg-text-secondary animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>
@@ -207,7 +207,7 @@ export default function ChatDrawer({ agentId, agentName, agentEmoji, onClose }: 
       </div>
 
       {/* Input */}
-      <div className="border-t border-dark-border px-4 py-3">
+      <div className="border-t border-border-default px-4 py-3">
         <div className="flex items-end gap-2">
           <textarea
             ref={inputRef}
@@ -216,7 +216,7 @@ export default function ChatDrawer({ agentId, agentName, agentEmoji, onClose }: 
             onKeyDown={handleKeyDown}
             placeholder="输入消息... (Enter 发送)"
             rows={1}
-            className="flex-1 resize-none rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue placeholder:text-dark-text-secondary"
+            className="flex-1 resize-none rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-tertiary"
             style={{ maxHeight: '120px' }}
             disabled={sending}
           />
@@ -228,7 +228,7 @@ export default function ChatDrawer({ agentId, agentName, agentEmoji, onClose }: 
                 ? 'bg-accent-red/20 text-accent-red hover:bg-accent-red/30'
                 : input.trim()
                   ? 'bg-accent-blue text-white hover:bg-accent-blue/90'
-                  : 'bg-dark-card text-dark-text-secondary'
+                  : 'bg-bg-surface text-text-secondary'
             }`}
           >
             {sending ? <StopCircle size={18} /> : <Send size={16} />}

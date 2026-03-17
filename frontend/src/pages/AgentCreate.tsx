@@ -82,20 +82,20 @@ export default function AgentCreate() {
     <div className="mx-auto max-w-2xl">
       <button
         onClick={() => navigate('/agents')}
-        className="mb-6 flex items-center gap-2 text-sm text-dark-text-secondary hover:text-dark-text"
+        className="mb-6 flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary"
       >
         <ArrowLeft size={16} />
         返回 Agent 列表
       </button>
 
-      <div className="rounded-xl border border-dark-border bg-dark-card p-6">
+      <div className="rounded-xl border border-border-default bg-bg-surface p-6">
         <div className="mb-6 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-blue">
             <Bot size={20} className="text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-dark-text">新建 Agent</h1>
-            <p className="text-sm text-dark-text-secondary">配置并创建新的 AI Agent</p>
+            <h1 className="text-lg font-bold text-text-primary">新建 Agent</h1>
+            <p className="text-sm text-text-secondary">配置并创建新的 AI Agent</p>
           </div>
         </div>
 
@@ -108,7 +108,7 @@ export default function AgentCreate() {
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Display Name */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-dark-text">显示名称 *</label>
+            <label className="mb-1.5 block text-sm font-medium text-text-primary">显示名称 *</label>
             <input
               type="text"
               required
@@ -123,25 +123,25 @@ export default function AgentCreate() {
                 }))
               }}
               placeholder="例如：保险智能体、Customer Support"
-              className="w-full rounded-lg border border-dark-border bg-dark-bg px-4 py-2.5 text-sm text-dark-text outline-none focus:border-accent-blue placeholder:text-dark-text-secondary"
+              className="w-full rounded-lg border border-border-default bg-bg-base px-4 py-2.5 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary"
             />
           </div>
 
           {/* Agent ID */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-dark-text">Agent ID *</label>
+            <label className="mb-1.5 block text-sm font-medium text-text-primary">Agent ID *</label>
             <input
               type="text"
               value={form.agentId || (form.agentIdManual ? '' : toAgentId(form.displayName))}
               onChange={e => setForm(f => ({ ...f, agentId: e.target.value, agentIdManual: true }))}
               placeholder="insurance-agent"
-              className={`w-full rounded-lg border bg-dark-bg px-4 py-2.5 text-sm text-dark-text outline-none placeholder:text-dark-text-secondary ${
+              className={`w-full rounded-lg border bg-bg-base px-4 py-2.5 text-sm text-text-primary outline-none placeholder:text-text-secondary ${
                 effectiveId && !hasValidId
                   ? 'border-accent-red focus:border-accent-red'
-                  : 'border-dark-border focus:border-accent-blue'
+                  : 'border-border-default focus:border-accent-blue'
               }`}
             />
-            <p className="mt-1 text-xs text-dark-text-secondary">
+            <p className="mt-1 text-xs text-text-secondary">
               仅支持小写字母、数字、下划线和连字符（a-z, 0-9, _, -）
               {form.displayName && !form.agentIdManual && !toAgentId(form.displayName) && (
                 <span className="text-accent-yellow ml-1">— 请手动输入英文 ID</span>
@@ -151,9 +151,9 @@ export default function AgentCreate() {
 
           {/* Workspace */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-dark-text">工作区路径</label>
-            <div className="flex items-center rounded-lg border border-dark-border bg-dark-bg overflow-hidden focus-within:border-accent-blue">
-              <span className="shrink-0 px-3 py-2.5 text-sm text-dark-text-secondary select-none border-r border-dark-border bg-dark-card">
+            <label className="mb-1.5 block text-sm font-medium text-text-primary">工作区路径</label>
+            <div className="flex items-center rounded-lg border border-border-default bg-bg-base overflow-hidden focus-within:border-accent-blue">
+              <span className="shrink-0 px-3 py-2.5 text-sm text-text-secondary select-none border-r border-border-default bg-bg-surface">
                 {WORKSPACE_PREFIX}
               </span>
               <input
@@ -161,32 +161,32 @@ export default function AgentCreate() {
                 value={form.workspaceSuffix}
                 onChange={e => setForm(f => ({ ...f, workspaceSuffix: e.target.value }))}
                 placeholder={effectiveId || '<agent-id>'}
-                className="flex-1 bg-transparent px-3 py-2.5 text-sm text-dark-text outline-none placeholder:text-dark-text-secondary"
+                className="flex-1 bg-transparent px-3 py-2.5 text-sm text-text-primary outline-none placeholder:text-text-secondary"
               />
             </div>
-            <p className="mt-1 text-xs text-dark-text-secondary">留空则自动生成</p>
+            <p className="mt-1 text-xs text-text-secondary">留空则自动生成</p>
           </div>
 
           {/* Model Selection */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-dark-text">
+            <label className="mb-1.5 block text-sm font-medium text-text-primary">
               <div className="flex items-center gap-2">
                 <Cpu size={14} />
                 选择模型
               </div>
             </label>
             {modelsLoading ? (
-              <div className="flex items-center gap-2 text-sm text-dark-text-secondary">
+              <div className="flex items-center gap-2 text-sm text-text-secondary">
                 <Loader2 size={14} className="animate-spin" />
                 加载中...
               </div>
             ) : models.length === 0 ? (
-              <p className="text-sm text-dark-text-secondary">暂无可用模型</p>
+              <p className="text-sm text-text-secondary">暂无可用模型</p>
             ) : (
               <select
                 value={form.model}
                 onChange={e => setForm(f => ({ ...f, model: e.target.value }))}
-                className="w-full rounded-lg border border-dark-border bg-dark-bg px-4 py-2.5 text-sm text-dark-text outline-none focus:border-accent-blue"
+                className="w-full rounded-lg border border-border-default bg-bg-base px-4 py-2.5 text-sm text-text-primary outline-none focus:border-accent-blue"
               >
                 <option value="">默认模型</option>
                 {models.map(model => (
@@ -196,32 +196,32 @@ export default function AgentCreate() {
                 ))}
               </select>
             )}
-            <p className="mt-1 text-xs text-dark-text-secondary">
+            <p className="mt-1 text-xs text-text-secondary">
               留空使用平台默认模型
             </p>
           </div>
 
           {/* Install Curated Skills */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-dark-text">
+            <label className="mb-1.5 block text-sm font-medium text-text-primary">
               <div className="flex items-center gap-2">
                 <Package size={14} />
                 安装精选技能
               </div>
             </label>
             {curatedLoading ? (
-              <div className="flex items-center gap-2 text-sm text-dark-text-secondary">
+              <div className="flex items-center gap-2 text-sm text-text-secondary">
                 <Loader2 size={14} className="animate-spin" />
                 加载中...
               </div>
             ) : curatedSkills.length === 0 ? (
-              <p className="text-sm text-dark-text-secondary">暂无可安装的精选技能</p>
+              <p className="text-sm text-text-secondary">暂无可安装的精选技能</p>
             ) : (
-              <div className="max-h-48 overflow-y-auto rounded-lg border border-dark-border bg-dark-bg p-3 space-y-2">
+              <div className="max-h-48 overflow-y-auto rounded-lg border border-border-default bg-bg-base p-3 space-y-2">
                 {curatedSkills.map(skill => (
                   <label
                     key={skill.id}
-                    className="flex items-start gap-3 p-2 rounded hover:bg-dark-card cursor-pointer transition-colors"
+                    className="flex items-start gap-3 p-2 rounded hover:bg-bg-surface cursor-pointer transition-colors"
                   >
                     <input
                       type="checkbox"
@@ -239,19 +239,19 @@ export default function AgentCreate() {
                           }))
                         }
                       }}
-                      className="mt-1 w-4 h-4 rounded border-dark-border text-accent-blue focus:ring-accent-blue bg-dark-bg"
+                      className="mt-1 w-4 h-4 rounded border-border-default text-accent-blue focus:ring-accent-blue bg-bg-base"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-dark-text">
+                      <div className="text-sm font-medium text-text-primary">
                         {skill.name}
                         {skill.is_featured && (
                           <span className="ml-2 text-xs bg-accent-yellow/20 text-accent-yellow px-1.5 py-0.5 rounded">精选</span>
                         )}
                       </div>
                       {skill.description && (
-                        <div className="text-xs text-dark-text-secondary truncate">{skill.description}</div>
+                        <div className="text-xs text-text-secondary truncate">{skill.description}</div>
                       )}
-                      <div className="text-xs text-dark-text-secondary mt-0.5">
+                      <div className="text-xs text-text-secondary mt-0.5">
                         {skill.category} · {skill.install_count} 次安装
                       </div>
                     </div>
@@ -259,14 +259,14 @@ export default function AgentCreate() {
                 ))}
               </div>
             )}
-            <p className="mt-1 text-xs text-dark-text-secondary">
+            <p className="mt-1 text-xs text-text-secondary">
               选择要预装到此 Agent 的精选技能，安装后可单独启用/禁用
             </p>
           </div>
 
           {/* Info box */}
           <div className="rounded-lg bg-accent-blue/10 p-4 text-sm text-accent-blue">
-            创建后将调用：<code className="rounded bg-dark-bg px-1.5 py-0.5 text-xs">
+            创建后将调用：<code className="rounded bg-bg-base px-1.5 py-0.5 text-xs">
               agents.create(name: "{effectiveId || '<agent-id>'}"
               {form.workspaceSuffix.trim() ? `, workspace: "${WORKSPACE_PREFIX}${form.workspaceSuffix.trim()}"` : ''})
             </code>
@@ -285,7 +285,7 @@ export default function AgentCreate() {
             <button
               type="button"
               onClick={() => navigate('/agents')}
-              className="rounded-lg border border-dark-border px-6 py-2.5 text-sm text-dark-text-secondary hover:text-dark-text transition-colors"
+              className="rounded-lg border border-border-default px-6 py-2.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
             >
               取消
             </button>

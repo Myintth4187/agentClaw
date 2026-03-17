@@ -32,14 +32,14 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-dark-bg">
-      <div className="w-full max-w-md rounded-xl border border-dark-border bg-dark-card p-8">
+    <div className="flex min-h-screen items-center justify-center bg-bg-base">
+      <div className="w-full max-w-md rounded-xl border border-border-default bg-bg-surface p-8">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-blue">
             <Bot className="h-6 w-6 text-white" />
           </div>
-          <h1 className="text-xl font-semibold text-dark-text">SkillClaw</h1>
+          <h1 className="text-xl font-semibold text-text-primary">SkillClaw</h1>
         </div>
 
         {/* Error */}
@@ -58,7 +58,7 @@ export default function Login() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              className="w-full rounded-lg border border-dark-border bg-dark-bg px-4 py-2.5 text-sm text-dark-text outline-none focus:border-accent-blue"
+              className="w-full rounded-lg border border-border-default bg-bg-base px-4 py-2.5 text-sm text-text-primary outline-none focus:border-accent-blue"
             />
           </div>
 
@@ -70,7 +70,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full rounded-lg border border-dark-border bg-dark-bg px-4 py-2.5 text-sm text-dark-text outline-none focus:border-accent-blue"
+                className="w-full rounded-lg border border-border-default bg-bg-base px-4 py-2.5 text-sm text-text-primary outline-none focus:border-accent-blue"
               />
             </div>
           )}
@@ -82,7 +82,7 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full rounded-lg border border-dark-border bg-dark-bg px-4 py-2.5 text-sm text-dark-text outline-none focus:border-accent-blue"
+              className="w-full rounded-lg border border-border-default bg-bg-base px-4 py-2.5 text-sm text-text-primary outline-none focus:border-accent-blue"
             />
           </div>
 

@@ -113,14 +113,14 @@ export default function SystemSettings() {
     <div>
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-dark-text">系统设置</h1>
-          <p className="mt-1 text-sm text-dark-text-secondary">
+          <h1 className="text-2xl font-bold text-text-primary">系统设置</h1>
+          <p className="mt-1 text-sm text-text-secondary">
             管理 OpenClaw 网关配置
           </p>
         </div>
         <button
           onClick={loadData}
-          className="flex items-center gap-1.5 rounded-lg border border-dark-border px-3 py-1.5 text-xs text-dark-text-secondary hover:text-dark-text transition-colors"
+          className="flex items-center gap-1.5 rounded-lg border border-border-default px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors"
         >
           <RefreshCw size={14} />
           刷新
@@ -143,14 +143,14 @@ export default function SystemSettings() {
 
       <div className="space-y-6 max-w-2xl">
         {/* Gateway Status */}
-        <section className="rounded-xl border border-dark-border bg-dark-card overflow-hidden">
-          <div className="px-5 py-3 border-b border-dark-border flex items-center gap-2">
-            <Server size={16} className="text-dark-text-secondary" />
-            <h2 className="text-sm font-semibold text-dark-text">网关状态</h2>
+        <section className="rounded-xl border border-border-default bg-bg-surface overflow-hidden">
+          <div className="px-5 py-3 border-b border-border-default flex items-center gap-2">
+            <Server size={16} className="text-text-secondary" />
+            <h2 className="text-sm font-semibold text-text-primary">网关状态</h2>
           </div>
           <div className="px-5 py-4">
             <div className="grid grid-cols-[140px_1fr] gap-x-4 gap-y-2.5 text-sm">
-              <span className="text-dark-text-secondary">连接状态</span>
+              <span className="text-text-secondary">连接状态</span>
               <span className="flex items-center gap-1.5">
                 <span className={`inline-block w-2 h-2 rounded-full ${gatewayConnected ? 'bg-accent-green' : 'bg-accent-red'}`} />
                 <span className={gatewayConnected ? 'text-accent-green' : 'text-accent-red'}>
@@ -158,34 +158,34 @@ export default function SystemSettings() {
                 </span>
               </span>
 
-              <span className="text-dark-text-secondary">配置文件</span>
-              <span className="text-dark-text font-mono text-xs">{String(status?.config_path || '-')}</span>
+              <span className="text-text-secondary">配置文件</span>
+              <span className="text-text-primary font-mono text-xs">{String(status?.config_path || '-')}</span>
 
-              <span className="text-dark-text-secondary">工作区</span>
-              <span className="text-dark-text font-mono text-xs">{String(status?.workspace || '-')}</span>
+              <span className="text-text-secondary">工作区</span>
+              <span className="text-text-primary font-mono text-xs">{String(status?.workspace || '-')}</span>
 
-              <span className="text-dark-text-secondary">当前模型</span>
-              <span className="text-dark-text font-mono text-xs">{String(status?.model || '-')}</span>
+              <span className="text-text-secondary">当前模型</span>
+              <span className="text-text-primary font-mono text-xs">{String(status?.model || '-')}</span>
             </div>
           </div>
         </section>
 
         {/* Gateway Config */}
-        <section className="rounded-xl border border-dark-border bg-dark-card overflow-hidden">
-          <div className="px-5 py-3 border-b border-dark-border flex items-center gap-2">
-            <Globe size={16} className="text-dark-text-secondary" />
-            <h2 className="text-sm font-semibold text-dark-text">网关配置</h2>
+        <section className="rounded-xl border border-border-default bg-bg-surface overflow-hidden">
+          <div className="px-5 py-3 border-b border-border-default flex items-center gap-2">
+            <Globe size={16} className="text-text-secondary" />
+            <h2 className="text-sm font-semibold text-text-primary">网关配置</h2>
           </div>
           <div className="px-5 py-4 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-dark-text-secondary mb-1">
+                <label className="block text-xs font-medium text-text-secondary mb-1">
                   绑定地址
                 </label>
                 <select
                   value={gatewayBind}
                   onChange={e => setGatewayBind(e.target.value)}
-                  className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue"
+                  className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue"
                 >
                   <option value="loopback">loopback (仅本机)</option>
                   <option value="all">all (所有接口)</option>
@@ -193,7 +193,7 @@ export default function SystemSettings() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-dark-text-secondary mb-1">
+                <label className="block text-xs font-medium text-text-secondary mb-1">
                   端口
                 </label>
                 <input
@@ -201,12 +201,12 @@ export default function SystemSettings() {
                   value={gatewayPort}
                   onChange={e => setGatewayPort(e.target.value)}
                   placeholder="18789"
-                  className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue"
+                  className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-dark-text-secondary mb-1">
+              <label className="block text-xs font-medium text-text-secondary mb-1">
                 允许的来源（CORS）
               </label>
               <textarea
@@ -214,9 +214,9 @@ export default function SystemSettings() {
                 onChange={e => setAllowedOrigins(e.target.value)}
                 rows={4}
                 placeholder={"http://localhost:3080\nhttp://127.0.0.1:8080"}
-                className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue placeholder:text-dark-text-secondary font-mono resize-none"
+                className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary font-mono resize-none"
               />
-              <p className="mt-1 text-[11px] text-dark-text-secondary">
+              <p className="mt-1 text-[11px] text-text-secondary">
                 每行一个 URL，用于 Control UI 的跨域访问控制
               </p>
             </div>
@@ -224,24 +224,24 @@ export default function SystemSettings() {
         </section>
 
         {/* About */}
-        <section className="rounded-xl border border-dark-border bg-dark-card overflow-hidden">
-          <div className="px-5 py-3 border-b border-dark-border flex items-center gap-2">
-            <Shield size={16} className="text-dark-text-secondary" />
-            <h2 className="text-sm font-semibold text-dark-text">关于</h2>
+        <section className="rounded-xl border border-border-default bg-bg-surface overflow-hidden">
+          <div className="px-5 py-3 border-b border-border-default flex items-center gap-2">
+            <Shield size={16} className="text-text-secondary" />
+            <h2 className="text-sm font-semibold text-text-primary">关于</h2>
           </div>
           <div className="px-5 py-4">
             <div className="grid grid-cols-[140px_1fr] gap-x-4 gap-y-2.5 text-sm">
-              <span className="text-dark-text-secondary">平台版本</span>
-              <span className="text-dark-text">v2026.3</span>
+              <span className="text-text-secondary">平台版本</span>
+              <span className="text-text-primary">v2026.3</span>
 
-              <span className="text-dark-text-secondary">OpenClaw</span>
-              <span className="text-dark-text font-mono text-xs">openclaw gateway</span>
+              <span className="text-text-secondary">OpenClaw</span>
+              <span className="text-text-primary font-mono text-xs">openclaw gateway</span>
 
-              <span className="text-dark-text-secondary">认证模式</span>
-              <span className="text-dark-text">{config?.gateway?.auth?.mode || 'none'}</span>
+              <span className="text-text-secondary">认证模式</span>
+              <span className="text-text-primary">{config?.gateway?.auth?.mode || 'none'}</span>
 
-              <span className="text-dark-text-secondary">数据目录</span>
-              <span className="text-dark-text font-mono text-xs">{String(status?.config_path || '').replace('/openclaw.json', '') || '~/.openclaw'}</span>
+              <span className="text-text-secondary">数据目录</span>
+              <span className="text-text-primary font-mono text-xs">{String(status?.config_path || '').replace('/openclaw.json', '') || '~/.openclaw'}</span>
             </div>
           </div>
         </section>
@@ -256,7 +256,7 @@ export default function SystemSettings() {
             {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
             保存设置
           </button>
-          <p className="text-xs text-dark-text-secondary self-center">
+          <p className="text-xs text-text-secondary self-center">
             部分设置需重启网关才能生效
           </p>
         </div>

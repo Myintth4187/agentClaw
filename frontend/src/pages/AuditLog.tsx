@@ -22,8 +22,8 @@ export default function AuditLog() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-dark-text">审计日志</h1>
-        <p className="mt-1 text-sm text-dark-text-secondary">系统操作和安全事件记录</p>
+        <h1 className="text-2xl font-bold text-text-primary">审计日志</h1>
+        <p className="mt-1 text-sm text-text-secondary">系统操作和安全事件记录</p>
       </div>
 
       <div className="space-y-2">
@@ -31,17 +31,17 @@ export default function AuditLog() {
           const config = levelConfig[log.level as keyof typeof levelConfig] || levelConfig.info
           const Icon = config.icon
           return (
-            <div key={log.id} className="flex items-start gap-4 rounded-xl border border-dark-border bg-dark-card p-4 hover:bg-dark-card-hover transition-colors">
+            <div key={log.id} className="flex items-start gap-4 rounded-xl border border-border-default bg-bg-surface p-4 hover:bg-bg-surface/50 transition-colors">
               <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${config.bg}`}>
                 <Icon size={16} className={config.color} />
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <div className="text-sm font-medium text-dark-text">{log.action}</div>
-                  <span className="text-xs text-dark-text-secondary">今天 {log.time}</span>
+                  <div className="text-sm font-medium text-text-primary">{log.action}</div>
+                  <span className="text-xs text-text-secondary">今天 {log.time}</span>
                 </div>
-                <div className="mt-0.5 text-xs text-dark-text-secondary">{log.detail}</div>
-                <div className="mt-1 text-xs text-dark-text-secondary/70">来源: {log.agent}</div>
+                <div className="mt-0.5 text-xs text-text-secondary">{log.detail}</div>
+                <div className="mt-1 text-xs text-text-secondary/70">来源: {log.agent}</div>
               </div>
             </div>
           )

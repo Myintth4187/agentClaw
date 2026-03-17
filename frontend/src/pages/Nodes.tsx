@@ -220,14 +220,14 @@ export default function Nodes() {
     <div>
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-dark-text">Node 管理</h1>
-          <p className="mt-1 text-sm text-dark-text-secondary">
+          <h1 className="text-2xl font-bold text-text-primary">Node 管理</h1>
+          <p className="mt-1 text-sm text-text-secondary">
             管理连接到网关的 Node 设备
           </p>
         </div>
         <button
           onClick={loadData}
-          className="flex items-center gap-1.5 rounded-lg border border-dark-border px-3 py-1.5 text-xs text-dark-text-secondary hover:text-dark-text transition-colors"
+          className="flex items-center gap-1.5 rounded-lg border border-border-default px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors"
         >
           <RefreshCw size={14} />
           刷新
@@ -254,22 +254,22 @@ export default function Nodes() {
           <section className="rounded-xl border border-accent-yellow/30 bg-accent-yellow/5 overflow-hidden">
             <div className="px-5 py-3 border-b border-accent-yellow/20 flex items-center gap-2">
               <AlertCircle size={16} className="text-accent-yellow" />
-              <h2 className="text-sm font-semibold text-dark-text">待批准的配对请求</h2>
+              <h2 className="text-sm font-semibold text-text-primary">待批准的配对请求</h2>
               <span className="ml-2 rounded-full bg-accent-yellow/20 px-2 py-0.5 text-xs text-accent-yellow font-medium">
                 {data.pending.length}
               </span>
             </div>
-            <div className="divide-y divide-dark-border">
+            <div className="divide-y divide-border-default">
               {data.pending.map(req => (
                 <div key={req.requestId} className="px-5 py-3 flex items-center gap-4">
-                  <div className="text-dark-text-secondary">
+                  <div className="text-text-secondary">
                     {getPlatformIcon(req.platform)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-dark-text">
+                    <div className="text-sm font-medium text-text-primary">
                       {req.displayName || req.nodeId.slice(0, 12)}
                     </div>
-                    <div className="text-xs text-dark-text-secondary flex gap-3 mt-0.5">
+                    <div className="text-xs text-text-secondary flex gap-3 mt-0.5">
                       <span>{getPlatformLabel(req.platform)}</span>
                       {req.remoteIp && <span>{req.remoteIp}</span>}
                       {req.version && <span>v{req.version}</span>}
@@ -298,37 +298,37 @@ export default function Nodes() {
         )}
 
         {/* Node List */}
-        <section className="rounded-xl border border-dark-border bg-dark-card overflow-hidden">
-          <div className="px-5 py-3 border-b border-dark-border flex items-center gap-2">
-            <Monitor size={16} className="text-dark-text-secondary" />
-            <h2 className="text-sm font-semibold text-dark-text">已配对节点</h2>
-            <span className="ml-2 rounded-full bg-dark-bg px-2 py-0.5 text-xs text-dark-text-secondary font-medium">
+        <section className="rounded-xl border border-border-default bg-bg-surface overflow-hidden">
+          <div className="px-5 py-3 border-b border-border-default flex items-center gap-2">
+            <Monitor size={16} className="text-text-secondary" />
+            <h2 className="text-sm font-semibold text-text-primary">已配对节点</h2>
+            <span className="ml-2 rounded-full bg-bg-base px-2 py-0.5 text-xs text-text-secondary font-medium">
               {mergedNodes.length}
             </span>
           </div>
 
           {mergedNodes.length === 0 ? (
             <div className="px-5 py-12 text-center">
-              <Server size={32} className="mx-auto mb-3 text-dark-text-secondary/40" />
-              <p className="text-sm text-dark-text-secondary">暂无已配对的节点</p>
-              <p className="text-xs text-dark-text-secondary mt-1">
-                在其他设备上运行 <code className="bg-dark-bg px-1.5 py-0.5 rounded text-accent-blue">openclaw node run --host &lt;gateway-host&gt;</code> 来添加节点
+              <Server size={32} className="mx-auto mb-3 text-text-secondary/40" />
+              <p className="text-sm text-text-secondary">暂无已配对的节点</p>
+              <p className="text-xs text-text-secondary mt-1">
+                在其他设备上运行 <code className="bg-bg-base px-1.5 py-0.5 rounded text-accent-blue">openclaw node run --host &lt;gateway-host&gt;</code> 来添加节点
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-dark-border">
+            <div className="divide-y divide-border-default">
               {mergedNodes.map(node => (
                 <div key={node.nodeId}>
                   <div
-                    className="px-5 py-3 flex items-center gap-4 hover:bg-dark-bg/50 cursor-pointer transition-colors"
+                    className="px-5 py-3 flex items-center gap-4 hover:bg-bg-surface/50 cursor-pointer transition-colors"
                     onClick={() => toggleDetail(node.nodeId)}
                   >
-                    <div className="text-dark-text-secondary">
+                    <div className="text-text-secondary">
                       {getPlatformIcon(node.platform || node.deviceFamily)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-dark-text">
+                        <span className="text-sm font-medium text-text-primary">
                           {node.displayName || node.nodeId.slice(0, 12)}
                         </span>
                         <span className="flex items-center gap-1">
@@ -339,13 +339,13 @@ export default function Nodes() {
                             </>
                           ) : (
                             <>
-                              <WifiOff size={12} className="text-dark-text-secondary/50" />
-                              <span className="text-xs text-dark-text-secondary/50">离线</span>
+                              <WifiOff size={12} className="text-text-secondary/50" />
+                              <span className="text-xs text-text-secondary/50">离线</span>
                             </>
                           )}
                         </span>
                       </div>
-                      <div className="text-xs text-dark-text-secondary flex gap-3 mt-0.5">
+                      <div className="text-xs text-text-secondary flex gap-3 mt-0.5">
                         <span>{getPlatformLabel(node.platform, node.deviceFamily)}</span>
                         {node.remoteIp && <span>{node.remoteIp}</span>}
                         {node.version && <span>v{node.version}</span>}
@@ -357,54 +357,54 @@ export default function Nodes() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={(e) => { e.stopPropagation(); handleDelete(node.nodeId, node.displayName) }}
-                        className="rounded-lg p-1.5 text-dark-text-secondary hover:text-accent-red hover:bg-accent-red/10 transition-colors"
+                        className="rounded-lg p-1.5 text-text-secondary hover:text-accent-red hover:bg-accent-red/10 transition-colors"
                         title="移除节点"
                       >
                         <Trash2 size={14} />
                       </button>
-                      {expandedNode === node.nodeId ? <ChevronUp size={14} className="text-dark-text-secondary" /> : <ChevronDown size={14} className="text-dark-text-secondary" />}
+                      {expandedNode === node.nodeId ? <ChevronUp size={14} className="text-text-secondary" /> : <ChevronDown size={14} className="text-text-secondary" />}
                     </div>
                   </div>
 
                   {/* Expanded detail */}
                   {expandedNode === node.nodeId && (
-                    <div className="px-5 pb-4 bg-dark-bg/30">
+                    <div className="px-5 pb-4 bg-bg-base/30">
                       {loadingDetail ? (
                         <div className="py-4 flex justify-center">
                           <Loader2 size={16} className="animate-spin text-accent-blue" />
                         </div>
                       ) : (
                         <div className="grid grid-cols-[120px_1fr] gap-x-4 gap-y-2 text-xs pt-2">
-                          <span className="text-dark-text-secondary">Node ID</span>
-                          <span className="text-dark-text font-mono break-all">{node.nodeId}</span>
+                          <span className="text-text-secondary">Node ID</span>
+                          <span className="text-text-primary font-mono break-all">{node.nodeId}</span>
 
                           {node.modelIdentifier && (
                             <>
-                              <span className="text-dark-text-secondary">设备型号</span>
-                              <span className="text-dark-text">{node.modelIdentifier}</span>
+                              <span className="text-text-secondary">设备型号</span>
+                              <span className="text-text-primary">{node.modelIdentifier}</span>
                             </>
                           )}
 
                           {node.coreVersion && (
                             <>
-                              <span className="text-dark-text-secondary">Core 版本</span>
-                              <span className="text-dark-text">{node.coreVersion}</span>
+                              <span className="text-text-secondary">Core 版本</span>
+                              <span className="text-text-primary">{node.coreVersion}</span>
                             </>
                           )}
 
                           {node.uiVersion && (
                             <>
-                              <span className="text-dark-text-secondary">UI 版本</span>
-                              <span className="text-dark-text">{node.uiVersion}</span>
+                              <span className="text-text-secondary">UI 版本</span>
+                              <span className="text-text-primary">{node.uiVersion}</span>
                             </>
                           )}
 
                           {node.caps && node.caps.length > 0 && (
                             <>
-                              <span className="text-dark-text-secondary">功能</span>
+                              <span className="text-text-secondary">功能</span>
                               <div className="flex flex-wrap gap-1">
                                 {node.caps.map(cap => (
-                                  <span key={cap} className="rounded bg-dark-bg px-1.5 py-0.5 text-dark-text-secondary border border-dark-border">
+                                  <span key={cap} className="rounded bg-bg-base px-1.5 py-0.5 text-text-secondary border border-border-default">
                                     {cap}
                                   </span>
                                 ))}
@@ -414,7 +414,7 @@ export default function Nodes() {
 
                           {node.commands && node.commands.length > 0 && (
                             <>
-                              <span className="text-dark-text-secondary">命令</span>
+                              <span className="text-text-secondary">命令</span>
                               <div className="flex flex-wrap gap-1">
                                 {node.commands.map(cmd => (
                                   <span key={cmd} className="rounded bg-accent-blue/10 px-1.5 py-0.5 text-accent-blue">
@@ -427,7 +427,7 @@ export default function Nodes() {
 
                           {node.permissions && Object.keys(node.permissions).length > 0 && (
                             <>
-                              <span className="text-dark-text-secondary">权限</span>
+                              <span className="text-text-secondary">权限</span>
                               <div className="flex flex-wrap gap-1">
                                 {Object.entries(node.permissions).map(([key, granted]) => (
                                   <span
@@ -443,8 +443,8 @@ export default function Nodes() {
 
                           {nodeDetails && (
                             <>
-                              <span className="text-dark-text-secondary">原始数据</span>
-                              <pre className="rounded bg-dark-bg border border-dark-border p-2 overflow-x-auto text-dark-text-secondary max-h-40">
+                              <span className="text-text-secondary">原始数据</span>
+                              <pre className="rounded bg-bg-base border border-border-default p-2 overflow-x-auto text-text-secondary max-h-40">
                                 {JSON.stringify(nodeDetails, null, 2)}
                               </pre>
                             </>
@@ -460,29 +460,29 @@ export default function Nodes() {
         </section>
 
         {/* How to add nodes */}
-        <section className="rounded-xl border border-dark-border bg-dark-card overflow-hidden">
-          <div className="px-5 py-3 border-b border-dark-border">
-            <h2 className="text-sm font-semibold text-dark-text">如何添加节点</h2>
+        <section className="rounded-xl border border-border-default bg-bg-surface overflow-hidden">
+          <div className="px-5 py-3 border-b border-border-default">
+            <h2 className="text-sm font-semibold text-text-primary">如何添加节点</h2>
           </div>
-          <div className="px-5 py-4 space-y-3 text-sm text-dark-text-secondary">
+          <div className="px-5 py-4 space-y-3 text-sm text-text-secondary">
             <div>
-              <p className="font-medium text-dark-text mb-1">远程主机</p>
-              <code className="block bg-dark-bg rounded-lg px-3 py-2 text-xs text-accent-blue font-mono">
+              <p className="font-medium text-text-primary mb-1">远程主机</p>
+              <code className="block bg-bg-base rounded-lg px-3 py-2 text-xs text-accent-blue font-mono">
                 openclaw node run --host &lt;gateway-host&gt; --port 18789 --display-name "My Node"
               </code>
             </div>
             <div>
-              <p className="font-medium text-dark-text mb-1">macOS 菜单栏应用</p>
+              <p className="font-medium text-text-primary mb-1">macOS 菜单栏应用</p>
               <p className="text-xs">在 OpenClaw 菜单栏应用中启用 Node 模式，应用会自动连接到网关</p>
             </div>
             <div>
-              <p className="font-medium text-dark-text mb-1">通过 SSH 隧道</p>
-              <code className="block bg-dark-bg rounded-lg px-3 py-2 text-xs text-accent-blue font-mono whitespace-pre-wrap">
+              <p className="font-medium text-text-primary mb-1">通过 SSH 隧道</p>
+              <code className="block bg-bg-base rounded-lg px-3 py-2 text-xs text-accent-blue font-mono whitespace-pre-wrap">
 {`ssh -N -L 18790:127.0.0.1:18789 user@gateway-host
 openclaw node run --host 127.0.0.1 --port 18790`}
               </code>
             </div>
-            <p className="text-xs text-dark-text-secondary/70">
+            <p className="text-xs text-text-secondary/70">
               新节点连接后会出现在"待批准的配对请求"中，批准后即可使用
             </p>
           </div>

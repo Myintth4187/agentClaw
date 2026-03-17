@@ -227,12 +227,12 @@ export default function AIModels() {
       {/* Header */}
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-dark-text">AI 模型</h1>
-          <p className="mt-1 text-sm text-dark-text-secondary">
+          <h1 className="text-2xl font-bold text-text-primary">AI 模型</h1>
+          <p className="mt-1 text-sm text-text-secondary">
             配置 AI 模型提供商
             {configuredModel && (
               <span className="ml-2">
-                · 默认: <code className="rounded bg-dark-card px-1.5 py-0.5 text-xs text-accent-blue">{configuredModel}</code>
+                · 默认: <code className="rounded bg-bg-surface px-1.5 py-0.5 text-xs text-accent-blue">{configuredModel}</code>
               </span>
             )}
           </p>
@@ -259,7 +259,7 @@ export default function AIModels() {
       {/* Configured providers */}
       {hasProviders ? (
         <div className="mb-8 space-y-3">
-          <h2 className="text-sm font-semibold text-dark-text-secondary uppercase tracking-wider mb-2">
+          <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">
             已配置的提供商
           </h2>
           {providerNames.map(name => {
@@ -272,7 +272,7 @@ export default function AIModels() {
             return (
               <div
                 key={name}
-                className="rounded-xl border border-dark-border bg-dark-card overflow-hidden"
+                className="rounded-xl border border-border-default bg-bg-surface overflow-hidden shadow-card"
               >
                 {/* Provider header */}
                 <div className="flex items-center justify-between px-5 py-4">
@@ -280,7 +280,7 @@ export default function AIModels() {
                     <span className="text-2xl">{icon}</span>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-dark-text">{displayName}</span>
+                        <span className="text-sm font-semibold text-text-primary">{displayName}</span>
                         {p.apiKey && (
                           <span className="flex items-center gap-1 text-[10px] text-accent-green">
                             <Key size={10} /> 已配置
@@ -292,7 +292,7 @@ export default function AIModels() {
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-dark-text-secondary mt-0.5">
+                      <div className="text-xs text-text-secondary mt-0.5">
                         {p.baseUrl && <span className="mr-3">{p.baseUrl}</span>}
                         <span>{p.api || 'openai-completions'}</span>
                       </div>
@@ -301,14 +301,14 @@ export default function AIModels() {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleEdit(name)}
-                      className="rounded-lg p-1.5 text-dark-text-secondary hover:text-dark-text hover:bg-dark-bg transition-colors"
+                      className="rounded-lg p-1.5 text-text-secondary hover:text-text-primary hover:bg-bg-base transition-colors"
                       title="编辑"
                     >
                       <Edit2 size={15} />
                     </button>
                     <button
                       onClick={() => handleDeleteProvider(name)}
-                      className="rounded-lg p-1.5 text-dark-text-secondary hover:text-accent-red hover:bg-accent-red/10 transition-colors"
+                      className="rounded-lg p-1.5 text-text-secondary hover:text-accent-red hover:bg-accent-red/10 transition-colors"
                       title="删除"
                     >
                       <Trash2 size={15} />
@@ -318,7 +318,7 @@ export default function AIModels() {
 
                 {/* Models */}
                 {models.length > 0 && (
-                  <div className="border-t border-dark-border">
+                  <div className="border-t border-border-default">
                     {models.map((model, i) => {
                       const fullId = `${name}/${model.id}`
                       const isDefault = configuredModel === fullId
@@ -326,15 +326,15 @@ export default function AIModels() {
                         <div
                           key={model.id}
                           className={`flex items-center justify-between px-5 py-2.5 ${
-                            i < models.length - 1 ? 'border-b border-dark-border' : ''
-                          } ${isDefault ? 'bg-accent-blue/5' : 'hover:bg-dark-bg/50'} transition-colors`}
+                            i < models.length - 1 ? 'border-b border-border-default' : ''
+                          } ${isDefault ? 'bg-accent-blue/5' : 'hover:bg-bg-base/50'} transition-colors`}
                         >
                           <div className="flex items-center gap-2">
-                            <span className={`text-sm ${isDefault ? 'font-medium text-accent-blue' : 'text-dark-text'}`}>
+                            <span className={`text-sm ${isDefault ? 'font-medium text-accent-blue' : 'text-text-primary'}`}>
                               {model.name || model.id}
                             </span>
                             {model.name && model.name !== model.id && (
-                              <span className="text-xs text-dark-text-secondary">{model.id}</span>
+                              <span className="text-xs text-text-secondary">{model.id}</span>
                             )}
                             {isDefault && (
                               <span className="rounded-full bg-accent-blue/10 px-2 py-0.5 text-[10px] text-accent-blue font-medium">
@@ -346,7 +346,7 @@ export default function AIModels() {
                             <button
                               onClick={() => handleSetDefault(name, model.id)}
                               disabled={saving}
-                              className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-dark-text-secondary hover:text-accent-blue hover:bg-accent-blue/5 transition-colors disabled:opacity-50"
+                              className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-text-secondary hover:text-accent-blue hover:bg-accent-blue/5 transition-colors disabled:opacity-50"
                             >
                               <Star size={12} />
                               设为默认
@@ -362,9 +362,9 @@ export default function AIModels() {
           })}
         </div>
       ) : (
-        <div className="mb-8 rounded-xl border border-dark-border bg-dark-card px-4 py-16 text-center">
-          <Key size={40} className="mx-auto mb-3 text-dark-text-secondary/50" />
-          <p className="text-sm text-dark-text-secondary mb-3">尚未配置任何模型提供商</p>
+        <div className="mb-8 rounded-xl border border-border-default bg-bg-surface px-4 py-16 text-center shadow-card">
+          <Key size={40} className="mx-auto mb-3 text-text-secondary/50" />
+          <p className="text-sm text-text-secondary mb-3">尚未配置任何模型提供商</p>
           <button
             onClick={() => setShowPicker(true)}
             className="inline-flex items-center gap-1.5 rounded-lg bg-accent-blue px-4 py-2 text-sm font-medium text-white hover:bg-accent-blue/90 transition-colors"
@@ -377,11 +377,11 @@ export default function AIModels() {
 
       {/* Provider picker modal */}
       {showPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="rounded-xl bg-dark-card border border-dark-border max-w-lg w-full mx-4 shadow-xl max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-dark-border shrink-0">
-              <h3 className="text-base font-semibold text-dark-text">选择提供商</h3>
-              <button onClick={() => setShowPicker(false)} className="rounded-lg p-1 text-dark-text-secondary hover:text-dark-text transition-colors">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="rounded-xl bg-bg-surface border border-border-default max-w-lg w-full mx-4 shadow-floating max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border-default shrink-0">
+              <h3 className="text-base font-semibold text-text-primary">选择提供商</h3>
+              <button onClick={() => setShowPicker(false)} className="rounded-lg p-1 text-text-secondary hover:text-text-primary transition-colors">
                 <X size={18} />
               </button>
             </div>
@@ -391,7 +391,7 @@ export default function AIModels() {
                 if (items.length === 0) return null
                 return (
                   <div key={category} className="mb-5 last:mb-0">
-                    <h4 className="text-xs font-semibold text-dark-text-secondary uppercase tracking-wider mb-2">
+                    <h4 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
                       {CATEGORY_LABELS[category]}
                     </h4>
                     <div className="grid grid-cols-2 gap-2">
@@ -404,15 +404,15 @@ export default function AIModels() {
                             disabled={alreadyAdded}
                             className={`flex items-center gap-2.5 rounded-lg border p-3 text-left transition-colors ${
                               alreadyAdded
-                                ? 'border-dark-border opacity-50 cursor-not-allowed'
-                                : 'border-dark-border hover:border-accent-blue/50 hover:bg-accent-blue/5'
+                                ? 'border-border-default opacity-50 cursor-not-allowed'
+                                : 'border-border-default hover:border-accent-blue/50 hover:bg-accent-blue/5'
                             }`}
                           >
                             <span className="text-xl shrink-0">{info.icon}</span>
                             <div className="min-w-0">
-                              <div className="text-sm font-medium text-dark-text truncate">{info.name}</div>
+                              <div className="text-sm font-medium text-text-primary truncate">{info.name}</div>
                               {alreadyAdded && (
-                                <div className="text-[10px] text-dark-text-secondary">已添加</div>
+                                <div className="text-[10px] text-text-secondary">已添加</div>
                               )}
                             </div>
                           </button>
@@ -430,12 +430,12 @@ export default function AIModels() {
       {/* Add/Edit provider form modal */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="rounded-xl bg-dark-card border border-dark-border max-w-lg w-full mx-4 shadow-xl max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-dark-border shrink-0">
-              <h3 className="text-base font-semibold text-dark-text">
+          <div className="rounded-xl bg-bg-surface border border-border-default max-w-lg w-full mx-4 shadow-floating max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border-default shrink-0">
+              <h3 className="text-base font-semibold text-text-primary">
                 {editingProvider ? `编辑: ${editingProvider}` : '配置提供商'}
               </h3>
-              <button onClick={() => setShowForm(false)} className="rounded-lg p-1 text-dark-text-secondary hover:text-dark-text transition-colors">
+              <button onClick={() => setShowForm(false)} className="rounded-lg p-1 text-text-secondary hover:text-text-primary transition-colors">
                 <X size={18} />
               </button>
             </div>
@@ -443,36 +443,36 @@ export default function AIModels() {
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
               {/* Name */}
               <div>
-                <label className="mb-1 block text-xs font-medium text-dark-text-secondary">提供商名称 *</label>
+                <label className="mb-1 block text-xs font-medium text-text-secondary">提供商名称 *</label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="例如: openai, anthropic"
-                  className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue placeholder:text-dark-text-secondary"
+                  className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary"
                 />
               </div>
 
               {/* API Type + Base URL */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-dark-text-secondary">API 类型</label>
+                  <label className="mb-1 block text-xs font-medium text-text-secondary">API 类型</label>
                   <select
                     value={form.api}
                     onChange={e => setForm(f => ({ ...f, api: e.target.value }))}
-                    className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue"
+                    className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue"
                   >
                     {API_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-dark-text-secondary">Base URL</label>
+                  <label className="mb-1 block text-xs font-medium text-text-secondary">Base URL</label>
                   <input
                     type="text"
                     value={form.baseUrl}
                     onChange={e => setForm(f => ({ ...f, baseUrl: e.target.value }))}
                     placeholder="https://api.openai.com/v1"
-                    className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue placeholder:text-dark-text-secondary"
+                    className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary"
                   />
                 </div>
               </div>
@@ -480,7 +480,7 @@ export default function AIModels() {
               {/* API Key */}
               <div>
                 <div className="mb-1 flex items-center justify-between">
-                  <label className="text-xs font-medium text-dark-text-secondary">API Key</label>
+                  <label className="text-xs font-medium text-text-secondary">API Key</label>
                   {(() => {
                     const info = PROVIDER_CATALOG.find(c => c.id === form.name)
                     if (info?.apiKeyUrl) {
@@ -503,14 +503,14 @@ export default function AIModels() {
                   value={form.apiKey}
                   onChange={e => setForm(f => ({ ...f, apiKey: e.target.value }))}
                   placeholder={PROVIDER_CATALOG.find(c => c.id === form.name)?.placeholder || 'sk-...'}
-                  className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text outline-none focus:border-accent-blue placeholder:text-dark-text-secondary"
+                  className="w-full rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary"
                 />
               </div>
 
               {/* Models */}
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <label className="text-xs font-medium text-dark-text-secondary">模型列表 *</label>
+                  <label className="text-xs font-medium text-text-secondary">模型列表 *</label>
                   <button onClick={addModelRow} className="flex items-center gap-1 text-xs text-accent-blue hover:text-accent-blue/80">
                     <Plus size={12} /> 添加模型
                   </button>
@@ -523,17 +523,17 @@ export default function AIModels() {
                         value={m.id}
                         onChange={e => updateModelRow(i, 'id', e.target.value)}
                         placeholder="模型 ID，例如 gpt-4o"
-                        className="flex-1 rounded-lg border border-dark-border bg-dark-bg px-3 py-1.5 text-sm text-dark-text outline-none focus:border-accent-blue placeholder:text-dark-text-secondary"
+                        className="flex-1 rounded-lg border border-border-default bg-bg-base px-3 py-1.5 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary"
                       />
                       <input
                         type="text"
                         value={m.name}
                         onChange={e => updateModelRow(i, 'name', e.target.value)}
                         placeholder="显示名称（可选）"
-                        className="flex-1 rounded-lg border border-dark-border bg-dark-bg px-3 py-1.5 text-sm text-dark-text outline-none focus:border-accent-blue placeholder:text-dark-text-secondary"
+                        className="flex-1 rounded-lg border border-border-default bg-bg-base px-3 py-1.5 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary"
                       />
                       {form.models.length > 1 && (
-                        <button onClick={() => removeModelRow(i)} className="text-dark-text-secondary hover:text-accent-red">
+                        <button onClick={() => removeModelRow(i)} className="text-text-secondary hover:text-accent-red">
                           <Trash2 size={14} />
                         </button>
                       )}
@@ -544,10 +544,10 @@ export default function AIModels() {
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end gap-2 px-5 py-3 border-t border-dark-border shrink-0">
+            <div className="flex justify-end gap-2 px-5 py-3 border-t border-border-default shrink-0">
               <button
                 onClick={() => setShowForm(false)}
-                className="rounded-lg border border-dark-border px-4 py-1.5 text-sm text-dark-text-secondary hover:text-dark-text transition-colors"
+                className="rounded-lg border border-border-default px-4 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
               >
                 取消
               </button>

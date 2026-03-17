@@ -95,13 +95,13 @@ export default function AgentDetail() {
     }
   }
 
-  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="animate-spin text-dark-text-secondary" size={32} /></div>
+  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="animate-spin text-text-secondary" size={32} /></div>
 
   if (!agentInfo && !detail) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <Bot size={48} className="mb-4 text-dark-text-secondary" />
-        <p className="text-dark-text-secondary">未找到该 Agent</p>
+        <Bot size={48} className="mb-4 text-text-secondary" />
+        <p className="text-text-secondary">未找到该 Agent</p>
         <button
           onClick={() => navigate('/agents')}
           className="mt-4 text-sm text-accent-blue hover:underline"
@@ -125,16 +125,16 @@ export default function AgentDetail() {
     <div className="mx-auto max-w-4xl">
       <button
         onClick={() => navigate('/agents')}
-        className="mb-6 flex items-center gap-2 text-sm text-dark-text-secondary hover:text-dark-text"
+        className="mb-6 flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary"
       >
         <ArrowLeft size={16} />
         返回 Agent 列表
       </button>
 
       {/* Header */}
-      <div className="mb-6 flex items-start justify-between rounded-xl border border-dark-border bg-dark-card p-6">
+      <div className="mb-6 flex items-start justify-between rounded-xl border border-border-default bg-bg-surface p-6">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-dark-bg">
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-bg-base">
             {emoji ? (
               <span className="text-2xl">{emoji}</span>
             ) : (
@@ -142,29 +142,29 @@ export default function AgentDetail() {
             )}
           </div>
           <div>
-            <h1 className="text-xl font-bold text-dark-text">{agentName}</h1>
-            <p className="text-sm text-dark-text-secondary">{id}</p>
+            <h1 className="text-xl font-bold text-text-primary">{agentName}</h1>
+            <p className="text-sm text-text-secondary">{id}</p>
           </div>
         </div>
       </div>
 
       {/* Workspace Info */}
       {detail?.workspace && (
-        <div className="mb-6 rounded-xl border border-dark-border bg-dark-card p-4">
+        <div className="mb-6 rounded-xl border border-border-default bg-bg-surface p-4">
           <div className="flex items-center gap-2 mb-2">
-            <FileText size={16} className="text-dark-text-secondary" />
-            <span className="text-sm font-medium text-dark-text">工作区路径</span>
+            <FileText size={16} className="text-text-secondary" />
+            <span className="text-sm font-medium text-text-primary">工作区路径</span>
           </div>
-          <code className="text-sm text-dark-text-secondary">{detail.workspace}</code>
+          <code className="text-sm text-text-secondary">{detail.workspace}</code>
         </div>
       )}
 
       {/* Files */}
       {detail?.files && detail.files.length > 0 && (
-        <div className="rounded-xl border border-dark-border bg-dark-card p-4">
+        <div className="rounded-xl border border-border-default bg-bg-surface p-4">
           <div className="flex items-center gap-2 mb-3">
-            <FileText size={16} className="text-dark-text-secondary" />
-            <span className="text-sm font-medium text-dark-text">配置文件</span>
+            <FileText size={16} className="text-text-secondary" />
+            <span className="text-sm font-medium text-text-primary">配置文件</span>
           </div>
           <div className="space-y-2">
             {detail.files.map(file => {
@@ -172,12 +172,12 @@ export default function AgentDetail() {
               const isLoading = loadingFiles[file.name]
               return (
                 <div key={file.name}>
-                  <div className="flex items-center justify-between rounded-lg bg-dark-bg px-4 py-2">
-                    <span className={`text-sm ${file.missing ? 'text-dark-text-secondary line-through' : 'text-dark-text'}`}>
+                  <div className="flex items-center justify-between rounded-lg bg-bg-base px-4 py-2">
+                    <span className={`text-sm ${file.missing ? 'text-text-secondary line-through' : 'text-text-primary'}`}>
                       {file.name}
                     </span>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-dark-text-secondary">
+                      <span className="text-xs text-text-secondary">
                         {file.missing ? '缺失' : formatSize(file.size)}
                       </span>
                       {!file.missing && (
@@ -204,7 +204,7 @@ export default function AgentDetail() {
                     </div>
                   </div>
                   {isExpanded && expandedFiles[file.name] !== null && (
-                    <pre className="mt-1 mb-1 mx-1 whitespace-pre-wrap rounded-lg bg-dark-bg/60 border border-dark-border p-4 text-sm text-dark-text leading-relaxed font-mono max-h-96 overflow-y-auto">
+                    <pre className="mt-1 mb-1 mx-1 whitespace-pre-wrap rounded-lg bg-bg-base/60 border border-border-default p-4 text-sm text-text-primary leading-relaxed font-mono max-h-96 overflow-y-auto">
                       {expandedFiles[file.name]}
                     </pre>
                   )}
@@ -216,25 +216,25 @@ export default function AgentDetail() {
       )}
 
       {/* Skills */}
-      <div className="rounded-xl border border-dark-border bg-dark-card p-4">
+      <div className="rounded-xl border border-border-default bg-bg-surface p-4">
         <div className="flex items-center gap-2 mb-3">
-          <Wrench size={16} className="text-dark-text-secondary" />
-          <span className="text-sm font-medium text-dark-text">技能管理</span>
-          {loadingSkills && <Loader2 size={14} className="animate-spin text-dark-text-secondary" />}
+          <Wrench size={16} className="text-text-secondary" />
+          <span className="text-sm font-medium text-text-primary">技能管理</span>
+          {loadingSkills && <Loader2 size={14} className="animate-spin text-text-secondary" />}
         </div>
         {skills.length === 0 ? (
-          <p className="text-sm text-dark-text-secondary">暂无可用技能</p>
+          <p className="text-sm text-text-secondary">暂无可用技能</p>
         ) : (
           <div className="space-y-2">
             {skills.map(skill => (
               <div
                 key={skill.name}
-                className="flex items-center justify-between rounded-lg bg-dark-bg px-4 py-2"
+                className="flex items-center justify-between rounded-lg bg-bg-base px-4 py-2"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm text-dark-text">{skill.name}</div>
+                  <div className="text-sm text-text-primary">{skill.name}</div>
                   {skill.description && (
-                    <div className="text-xs text-dark-text-secondary truncate">{skill.description}</div>
+                    <div className="text-xs text-text-secondary truncate">{skill.description}</div>
                   )}
                 </div>
                 <button
@@ -242,7 +242,7 @@ export default function AgentDetail() {
                   disabled={togglingSkill === skill.name}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     skill.disabled
-                      ? 'bg-dark-card border border-dark-border text-dark-text-secondary hover:text-dark-text'
+                      ? 'bg-bg-surface border border-border-default text-text-secondary hover:text-text-primary'
                       : 'bg-accent-blue/20 text-accent-blue hover:bg-accent-blue/30'
                   }`}
                 >

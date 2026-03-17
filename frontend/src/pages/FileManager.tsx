@@ -249,19 +249,19 @@ export default function FileManager() {
     <div>
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-dark-text">文件管理</h1>
-          <p className="mt-1 text-sm text-dark-text-secondary">
+          <h1 className="text-2xl font-bold text-text-primary">文件管理</h1>
+          <p className="mt-1 text-sm text-text-secondary">
             浏览和管理 {data?.root || '~/.openclaw'} 目录
           </p>
         </div>
         {/* Admin Agent Selector */}
         {isAdmin && agentWorkspaces.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-dark-text-secondary">Agent:</span>
+            <span className="text-sm text-text-secondary">Agent:</span>
             <select
               value={selectedAgentId}
               onChange={(e) => setSelectedAgentId(e.target.value)}
-              className="rounded-lg border border-dark-border bg-dark-card px-3 py-1.5 text-sm text-dark-text outline-none focus:border-accent-blue"
+              className="rounded-lg border border-border-default bg-bg-surface px-3 py-1.5 text-sm text-text-primary outline-none focus:border-accent-blue"
             >
               {agentWorkspaces.map((ws) => (
                 <option key={ws.id} value={ws.id}>
@@ -283,7 +283,7 @@ export default function FileManager() {
         <div className="flex items-center gap-1 text-sm">
           <button
             onClick={() => navigateTo('')}
-            className="flex items-center gap-1 text-dark-text-secondary hover:text-accent-blue transition-colors"
+            className="flex items-center gap-1 text-text-secondary hover:text-accent-blue transition-colors"
           >
             <Home size={15} />
           </button>
@@ -292,13 +292,13 @@ export default function FileManager() {
             const isLast = i === breadcrumbs.length - 1
             return (
               <span key={segPath} className="flex items-center gap-1">
-                <ChevronRight size={14} className="text-dark-text-secondary" />
+                <ChevronRight size={14} className="text-text-secondary" />
                 {isLast ? (
-                  <span className="text-dark-text font-medium">{seg}</span>
+                  <span className="text-text-primary font-medium">{seg}</span>
                 ) : (
                   <button
                     onClick={() => navigateTo(segPath)}
-                    className="text-dark-text-secondary hover:text-accent-blue transition-colors"
+                    className="text-text-secondary hover:text-accent-blue transition-colors"
                   >
                     {seg}
                   </button>
@@ -313,7 +313,7 @@ export default function FileManager() {
           {currentPath && (
             <button
               onClick={goUp}
-              className="flex items-center gap-1 rounded-lg border border-dark-border px-3 py-1.5 text-xs text-dark-text-secondary hover:text-dark-text transition-colors"
+              className="flex items-center gap-1 rounded-lg border border-border-default px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors"
             >
               <ArrowLeft size={14} />
               返回上级
@@ -321,7 +321,7 @@ export default function FileManager() {
           )}
           <button
             onClick={() => setShowNewFolder(true)}
-            className="flex items-center gap-1 rounded-lg border border-dark-border px-3 py-1.5 text-xs text-dark-text-secondary hover:text-dark-text transition-colors"
+            className="flex items-center gap-1 rounded-lg border border-border-default px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors"
           >
             <FolderPlus size={14} />
             新建文件夹
@@ -350,7 +350,7 @@ export default function FileManager() {
             onChange={e => setNewFolderName(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') handleNewFolder(); if (e.key === 'Escape') setShowNewFolder(false) }}
             placeholder="文件夹名称..."
-            className="rounded-lg border border-dark-border bg-dark-bg px-3 py-1.5 text-sm text-dark-text outline-none focus:border-accent-blue placeholder:text-dark-text-secondary"
+            className="rounded-lg border border-border-default bg-bg-base px-3 py-1.5 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary"
           />
           <button
             onClick={handleNewFolder}
@@ -360,7 +360,7 @@ export default function FileManager() {
           </button>
           <button
             onClick={() => { setShowNewFolder(false); setNewFolderName('') }}
-            className="rounded-lg border border-dark-border px-3 py-1.5 text-xs text-dark-text-secondary"
+            className="rounded-lg border border-border-default px-3 py-1.5 text-xs text-text-secondary"
           >
             取消
           </button>
@@ -373,9 +373,9 @@ export default function FileManager() {
           <Loader2 size={28} className="animate-spin text-accent-blue" />
         </div>
       ) : (
-        <div className="rounded-xl border border-dark-border bg-dark-card overflow-hidden">
+        <div className="rounded-xl border border-border-default bg-bg-surface overflow-hidden">
           {/* Table header */}
-          <div className="grid grid-cols-[1fr_100px_160px_100px] gap-2 border-b border-dark-border bg-dark-bg px-4 py-2 text-xs font-medium text-dark-text-secondary">
+          <div className="grid grid-cols-[1fr_100px_160px_100px] gap-2 border-b border-border-default bg-bg-base px-4 py-2 text-xs font-medium text-text-secondary">
             <span>名称</span>
             <span className="text-right">大小</span>
             <span className="text-right">修改时间</span>
@@ -390,30 +390,30 @@ export default function FileManager() {
                 const isPreviewing = previewFile?.name === entry.name
                 return (
                   <div key={entry.path}>
-                    <div className="grid grid-cols-[1fr_100px_160px_100px] gap-2 items-center border-b border-dark-border px-4 py-2 hover:bg-dark-bg/50 transition-colors">
+                    <div className="grid grid-cols-[1fr_100px_160px_100px] gap-2 items-center border-b border-border-default px-4 py-2 hover:bg-bg-surface/50 transition-colors">
                       {/* Name */}
                       <button
                         onClick={() => isDir ? navigateTo(entry.path) : (isTextFile(entry) ? handlePreview(entry) : undefined)}
                         className={`flex items-center gap-2 text-sm text-left ${
                           isDir
                             ? 'text-accent-blue hover:underline'
-                            : isTextFile(entry) ? 'text-dark-text hover:text-accent-blue' : 'text-dark-text cursor-default'
+                            : isTextFile(entry) ? 'text-text-primary hover:text-accent-blue' : 'text-text-primary cursor-default'
                         }`}
                       >
                         {isDir
                           ? <Folder size={16} className="shrink-0 text-accent-yellow" />
-                          : <FileText size={16} className="shrink-0 text-dark-text-secondary" />
+                          : <FileText size={16} className="shrink-0 text-text-secondary" />
                         }
                         <span className="truncate">{entry.name}</span>
                       </button>
 
                       {/* Size */}
-                      <span className="text-right text-xs text-dark-text-secondary">
+                      <span className="text-right text-xs text-text-secondary">
                         {isDir ? '-' : formatSize(entry.size)}
                       </span>
 
                       {/* Modified */}
-                      <span className="text-right text-xs text-dark-text-secondary">
+                      <span className="text-right text-xs text-text-secondary">
                         {formatDate(entry.modified)}
                       </span>
 
@@ -422,7 +422,7 @@ export default function FileManager() {
                         {!isDir && (
                           <button
                             onClick={() => handleDownload(entry)}
-                            className="text-dark-text-secondary hover:text-accent-blue transition-colors"
+                            className="text-text-secondary hover:text-accent-blue transition-colors"
                             title="下载"
                           >
                             <Download size={14} />
@@ -431,7 +431,7 @@ export default function FileManager() {
                         <button
                           onClick={() => handleDelete(entry)}
                           disabled={isDeleting}
-                          className="text-dark-text-secondary hover:text-accent-red transition-colors disabled:opacity-50"
+                          className="text-text-secondary hover:text-accent-red transition-colors disabled:opacity-50"
                           title="删除"
                         >
                           {isDeleting
@@ -444,9 +444,9 @@ export default function FileManager() {
 
                     {/* File preview */}
                     {isPreviewing && previewFile && (
-                      <div className="border-b border-dark-border bg-dark-bg/30 px-4 py-3">
+                      <div className="border-b border-border-default bg-bg-base/30 px-4 py-3">
                         {previewLoading ? (
-                          <div className="flex items-center gap-2 text-sm text-dark-text-secondary">
+                          <div className="flex items-center gap-2 text-sm text-text-secondary">
                             <Loader2 size={14} className="animate-spin" />
                             加载中...
                           </div>
@@ -456,7 +456,7 @@ export default function FileManager() {
                               ref={editTextareaRef}
                               value={editContent}
                               onChange={(e) => setEditContent(e.target.value)}
-                              className="w-full h-80 rounded-lg bg-dark-bg border border-dark-border p-4 text-xs text-dark-text leading-relaxed font-mono resize-none focus:border-accent-blue focus:outline-none"
+                              className="w-full h-80 rounded-lg bg-bg-base border border-border-default p-4 text-xs text-text-primary leading-relaxed font-mono resize-none focus:border-accent-blue focus:outline-none"
                               spellCheck={false}
                             />
                             <div className="flex items-center gap-2">
@@ -471,7 +471,7 @@ export default function FileManager() {
                               <button
                                 onClick={handleCancelEdit}
                                 disabled={saving}
-                                className="flex items-center gap-1 rounded-lg border border-dark-border px-3 py-1.5 text-xs text-dark-text-secondary hover:text-dark-text"
+                                className="flex items-center gap-1 rounded-lg border border-border-default px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary"
                               >
                                 <X size={12} />
                                 取消
@@ -480,14 +480,14 @@ export default function FileManager() {
                           </div>
                         ) : (
                           <div className="space-y-3">
-                            <pre className="whitespace-pre-wrap rounded-lg bg-dark-bg p-4 text-xs text-dark-text leading-relaxed font-mono max-h-80 overflow-y-auto">
+                            <pre className="whitespace-pre-wrap rounded-lg bg-bg-base p-4 text-xs text-text-primary leading-relaxed font-mono max-h-80 overflow-y-auto">
                               {previewFile.content}
                             </pre>
                             {!previewFile.content.startsWith('(') && (
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={handleEdit}
-                                  className="flex items-center gap-1 rounded-lg border border-dark-border px-3 py-1.5 text-xs text-dark-text-secondary hover:text-accent-blue transition-colors"
+                                  className="flex items-center gap-1 rounded-lg border border-border-default px-3 py-1.5 text-xs text-text-secondary hover:text-accent-blue transition-colors"
                                 >
                                   <Pencil size={12} />
                                   编辑
@@ -503,7 +503,7 @@ export default function FileManager() {
               })}
             </div>
           ) : (
-            <div className="px-4 py-12 text-center text-sm text-dark-text-secondary">
+            <div className="px-4 py-12 text-center text-sm text-text-secondary">
               空目录
             </div>
           )}

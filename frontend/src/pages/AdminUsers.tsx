@@ -93,7 +93,7 @@ export default function AdminUsers() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="animate-spin text-dark-text-secondary" size={32} />
+        <Loader2 className="animate-spin text-text-secondary" size={32} />
       </div>
     )
   }
@@ -111,8 +111,8 @@ export default function AdminUsers() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-dark-text">用户管理</h1>
-          <p className="mt-1 text-sm text-dark-text-secondary">管理平台用户和容器</p>
+          <h1 className="text-2xl font-bold text-text-primary">用户管理</h1>
+          <p className="mt-1 text-sm text-text-secondary">管理平台用户和容器</p>
         </div>
         <button
           onClick={() => fetchData()}
@@ -126,57 +126,57 @@ export default function AdminUsers() {
 
       {/* Stats */}
       <div className="mb-8 grid grid-cols-3 gap-4">
-        <div className="rounded-xl border border-dark-border bg-dark-card p-5">
+        <div className="rounded-xl border border-border-default bg-bg-surface p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-blue">
               <Users size={20} className="text-white" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-dark-text">{usage?.total_users ?? 0}</div>
-              <div className="text-sm text-dark-text-secondary">注册用户</div>
+              <div className="text-2xl font-bold text-text-primary">{usage?.total_users ?? 0}</div>
+              <div className="text-sm text-text-secondary">注册用户</div>
             </div>
           </div>
         </div>
 
-        <div className="rounded-xl border border-dark-border bg-dark-card p-5">
+        <div className="rounded-xl border border-border-default bg-bg-surface p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-green">
               <Container size={20} className="text-white" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-dark-text">{usage?.active_containers ?? 0}</div>
-              <div className="text-sm text-dark-text-secondary">运行中容器</div>
+              <div className="text-2xl font-bold text-text-primary">{usage?.active_containers ?? 0}</div>
+              <div className="text-sm text-text-secondary">运行中容器</div>
             </div>
           </div>
         </div>
 
-        <div className="rounded-xl border border-dark-border bg-dark-card p-5">
+        <div className="rounded-xl border border-border-default bg-bg-surface p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-purple">
               <TrendingUp size={20} className="text-white" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-dark-text">{(((usage?.total_tokens_today ?? 0)) / 1000).toFixed(1)}K</div>
-              <div className="text-sm text-dark-text-secondary">今日 Token 消耗</div>
+              <div className="text-2xl font-bold text-text-primary">{(((usage?.total_tokens_today ?? 0)) / 1000).toFixed(1)}K</div>
+              <div className="text-sm text-text-secondary">今日 Token 消耗</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Users Table */}
-      <div className="rounded-xl border border-dark-border bg-dark-card">
-        <div className="flex items-center justify-between border-b border-dark-border px-6 py-4">
+      <div className="rounded-xl border border-border-default bg-bg-surface">
+        <div className="flex items-center justify-between border-b border-border-default px-6 py-4">
           <div className="flex items-center gap-2">
             <Users size={20} className="text-accent-blue" />
-            <h2 className="text-base font-semibold text-dark-text">用户列表</h2>
+            <h2 className="text-base font-semibold text-text-primary">用户列表</h2>
           </div>
-          <span className="text-sm text-dark-text-secondary">{users.length} 个用户</span>
+          <span className="text-sm text-text-secondary">{users.length} 个用户</span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="text-left text-xs text-dark-text-secondary border-b border-dark-border">
+              <tr className="text-left text-xs text-text-secondary border-b border-border-default">
                 <th className="px-6 py-3 font-medium">用户</th>
                 <th className="px-4 py-3 font-medium">角色</th>
                 <th className="px-4 py-3 font-medium">容器状态</th>
@@ -188,15 +188,15 @@ export default function AdminUsers() {
             </thead>
             <tbody>
               {users.map(user => (
-                <tr key={user.id} className="border-b border-dark-border/50 hover:bg-dark-card-hover">
+                <tr key={user.id} className="border-b border-border-default/50 hover:bg-bg-surface/50">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-purple">
                         <User size={16} className="text-white" />
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-dark-text">{user.username}</div>
-                        <div className="text-xs text-dark-text-secondary">{user.email}</div>
+                        <div className="text-sm font-medium text-text-primary">{user.username}</div>
+                        <div className="text-xs text-text-secondary">{user.email}</div>
                       </div>
                     </div>
                   </td>
@@ -204,7 +204,7 @@ export default function AdminUsers() {
                     <select
                       value={user.role}
                       onChange={(e) => updateRole(user.id, e.target.value)}
-                      className="rounded border border-dark-border bg-dark-bg px-2 py-1 text-sm text-dark-text"
+                      className="rounded border border-border-default bg-bg-base px-2 py-1 text-sm text-text-primary"
                     >
                       <option value="user">用户</option>
                       <option value="admin">管理员</option>
@@ -214,27 +214,27 @@ export default function AdminUsers() {
                     <span className={`flex items-center gap-1.5 text-xs ${
                       user.container_status === 'running' ? 'text-accent-green' :
                       user.container_status === 'paused' ? 'text-accent-yellow' :
-                      user.container_status ? 'text-dark-text-secondary' : 'text-dark-text-secondary/50'
+                      user.container_status ? 'text-text-secondary' : 'text-text-secondary/50'
                     }`}>
                       <span className={`h-2 w-2 rounded-full ${
                         user.container_status === 'running' ? 'bg-accent-green' :
                         user.container_status === 'paused' ? 'bg-accent-yellow' :
-                        'bg-dark-text-secondary/50'
+                        'bg-text-secondary/50'
                       }`} />
                       {user.container_status || '无容器'}
                     </span>
                   </td>
-                  <td className="px-4 py-4 text-sm text-dark-text-secondary">
+                  <td className="px-4 py-4 text-sm text-text-secondary">
                     {user.container_cpu != null ? `${user.container_cpu.toFixed(1)}%` : '-'}
                   </td>
-                  <td className="px-4 py-4 text-sm text-dark-text-secondary">
+                  <td className="px-4 py-4 text-sm text-text-secondary">
                     {user.container_memory != null ? (
                       <span title={`内存使用率: ${user.container_memory_percent?.toFixed(1) ?? '-'}%`}>
                         {user.container_memory}
                       </span>
                     ) : '-'}
                   </td>
-                  <td className="px-4 py-4 text-sm text-dark-text-secondary">
+                  <td className="px-4 py-4 text-sm text-text-secondary">
                     {(() => {
                       const used = user.tokens_used_today ?? 0
                       const limit = QUOTA_LIMITS[user.quota_tier] ?? QUOTA_LIMITS.free
@@ -246,7 +246,7 @@ export default function AdminUsers() {
                       {user.container_status && (
                         <button
                           onClick={() => deleteContainer(user.id)}
-                          className="rounded p-1.5 text-dark-text-secondary hover:bg-dark-card hover:text-accent-red"
+                          className="rounded p-1.5 text-text-secondary hover:bg-bg-surface hover:text-accent-red"
                           title="删除容器"
                         >
                           <Trash2 size={16} />
