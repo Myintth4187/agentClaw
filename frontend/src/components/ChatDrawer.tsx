@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { X, Send, Bot, Loader2, StopCircle, User } from 'lucide-react'
-import { getSession, sendChatMessage } from '../lib/api'
+import { X, Send, Bot, Loader2, StopCircle, User, Wrench } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { getSession, sendChatMessage, getAccessToken } from '../lib/api'
 
 interface ChatMessage {
   role: string
@@ -8,23 +10,35 @@ interface ChatMessage {
   timestamp: string | null
 }
 
+interface ToolStatus {
+  name: string
+  done: boolean
+}
+
 interface Props {
   agentId: string
   agentName: string
   agentEmoji?: string
+  sessionKey?: string
   onClose: () => void
 }
 
-export default function ChatDrawer({ agentId, agentName, agentEmoji, onClose }: Props) {
+export default function ChatDrawer({ agentId, agentName, agentEmoji, sessionKey: sessionKeyProp, onClose }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  const sessionKey = `web-${agentId}`
+  // WebSocket refs
+  const wsRef = useRef<WebSocket | null>(null)
+  const wsReadyRef = useRef(false)
+  const wsCompletedRef = useRef(false)
+  const wsFinalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const sessionKey = sessionKeyProp || `web-${agentId}`
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -36,7 +50,6 @@ export default function ChatDrawer({ agentId, agentName, agentEmoji, onClose }: 
       const detail = await getSession(sessionKey)
       setMessages(detail.messages || [])
     } catch {
-      // Session may not exist yet — that's ok
       setMessages([])
     }
   }, [sessionKey])
@@ -50,60 +63,158 @@ export default function ChatDrawer({ agentId, agentName, agentEmoji, onClose }: 
   // Scroll on new messages
   useEffect(() => {
     scrollToBottom()
-  }, [messages, scrollToBottom])
+  }, [messages, toolStatuses, scrollToBottom])
 
   // Focus input
   useEffect(() => {
     if (!loading) inputRef.current?.focus()
   }, [loading])
 
-  // Cleanup polling on unmount
-  useEffect(() => {
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current)
-    }
-  }, [])
+  // WebSocket connection
+  const connectWs = useCallback(() => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) return
 
-  const startPolling = useCallback(() => {
-    if (pollRef.current) clearInterval(pollRef.current)
-    pollRef.current = setInterval(async () => {
+    const token = getAccessToken()
+    if (!token) return
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const host = window.location.host
+    const ws = new WebSocket(`${protocol}//${host}/api/openclaw/ws?token=${token}`)
+    wsRef.current = ws
+    wsReadyRef.current = false
+
+    ws.onmessage = (evt) => {
+      try {
+        const msg = JSON.parse(evt.data)
+
+        // Gateway handshake
+        if (msg.type === 'event' && msg.event === 'connect.challenge') {
+          ws.send(JSON.stringify({
+            type: 'req', id: 'c1', method: 'connect',
+            params: {
+              minProtocol: 3, maxProtocol: 3,
+              client: { id: 'drawer-client', mode: 'backend', displayName: 'chatdrawer', version: '1.0', platform: 'web' },
+              role: 'operator', scopes: [],
+            },
+          }))
+          return
+        }
+
+        if (msg.type === 'res' && msg.id === 'c1') {
+          wsReadyRef.current = msg.ok === true
+          return
+        }
+
+        // Tool use events
+        if (msg.type === 'event' && msg.payload) {
+          if (msg.event === 'tool.use.start') {
+            const toolName = msg.payload.tool || msg.payload.name || 'tool'
+            setToolStatuses(prev => [...prev.filter(t => t.name !== toolName), { name: toolName, done: false }])
+          } else if (msg.event === 'tool.use.end') {
+            const toolName = msg.payload.tool || msg.payload.name || 'tool'
+            setToolStatuses(prev => prev.map(t => t.name === toolName ? { ...t, done: true } : t))
+            // Remove completed tool statuses after a short delay
+            setTimeout(() => {
+              setToolStatuses(prev => prev.filter(t => !(t.name === toolName && t.done)))
+            }, 2000)
+          }
+        }
+
+        // Chat completion event
+        if (msg.type === 'event' && msg.event === 'chat' && msg.payload) {
+          const { state, sessionKey: evtKey } = msg.payload
+          if ((state === 'final' || state === 'error' || state === 'aborted') &&
+              (evtKey === sessionKey || evtKey?.replace(/:/g, '') === sessionKey.replace(/:/g, ''))) {
+
+            getSession(sessionKey).then(detail => {
+              setMessages(detail.messages || [])
+              setToolStatuses([])
+            }).catch(() => {})
+
+            if (wsFinalTimerRef.current) clearTimeout(wsFinalTimerRef.current)
+            wsFinalTimerRef.current = setTimeout(() => {
+              wsCompletedRef.current = true
+            }, 500)
+          }
+        }
+      } catch {
+        // ignore parse errors
+      }
+    }
+
+    ws.onclose = () => {
+      wsRef.current = null
+      wsReadyRef.current = false
+      setTimeout(connectWs, 3000)
+    }
+
+    ws.onerror = () => { /* onclose fires after */ }
+  }, [sessionKey])
+
+  useEffect(() => {
+    connectWs()
+    return () => {
+      if (wsFinalTimerRef.current) clearTimeout(wsFinalTimerRef.current)
+      if (wsRef.current) {
+        wsRef.current.onclose = null
+        wsRef.current.close()
+        wsRef.current = null
+      }
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const waitForResponse = async () => {
+    wsCompletedRef.current = false
+    const wsAvailable = wsRef.current?.readyState === WebSocket.OPEN && wsReadyRef.current
+
+    if (wsAvailable) {
+      const maxWait = 240000
+      const start = Date.now()
+      while (Date.now() - start < maxWait) {
+        await new Promise(r => setTimeout(r, 300))
+        if (wsCompletedRef.current) return
+        if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) break
+      }
+      if (wsCompletedRef.current) return
+    }
+
+    // Fallback polling
+    for (let i = 0; i < 120; i++) {
+      await new Promise(r => setTimeout(r, 1000))
+      if (wsCompletedRef.current) return
       try {
         const detail = await getSession(sessionKey)
         const msgs = detail.messages || []
         setMessages(msgs)
-        // Stop polling when last message is from assistant (response complete)
         if (msgs.length > 0 && msgs[msgs.length - 1].role === 'assistant') {
-          if (pollRef.current) clearInterval(pollRef.current)
-          pollRef.current = null
           setSending(false)
+          return
         }
-      } catch {
-        // ignore polling errors
-      }
-    }, 1000)
-  }, [sessionKey])
+      } catch { /* continue */ }
+    }
+  }
 
   const handleSend = async () => {
     const text = input.trim()
     if (!text || sending) return
 
-    // Optimistically add user message
     const userMsg: ChatMessage = { role: 'user', content: text, timestamp: new Date().toISOString() }
     setMessages(prev => [...prev, userMsg])
     setInput('')
     setSending(true)
+    setToolStatuses([])
 
     try {
       await sendChatMessage(sessionKey, text)
-      // Start polling for assistant response
-      startPolling()
+      await waitForResponse()
     } catch (err) {
-      setSending(false)
-      // Add error message
       setMessages(prev => [
         ...prev,
         { role: 'assistant', content: `发送失败: ${(err as Error).message}`, timestamp: new Date().toISOString() },
       ])
+    } finally {
+      setSending(false)
+      setToolStatuses([])
     }
   }
 
@@ -116,7 +227,7 @@ export default function ChatDrawer({ agentId, agentName, agentEmoji, onClose }: 
 
   return (
     <div
-      className="fixed inset-y-0 right-0 z-50 flex w-[420px] flex-col border-l border-border-default bg-bg-elevated shadow-floating"
+      className="fixed inset-y-0 right-0 z-50 flex w-[440px] flex-col border-l border-border-default bg-bg-elevated shadow-floating"
       style={{ animation: 'slideInRight 0.2s ease-out' }}
     >
       {/* Header */}
@@ -177,14 +288,39 @@ export default function ChatDrawer({ agentId, agentName, agentEmoji, onClose }: 
                     : 'bg-bg-surface text-text-primary border border-border-default'
                 }`}
               >
-                <div className="whitespace-pre-wrap break-words">{msg.content}</div>
+                {msg.role === 'user' ? (
+                  <div className="whitespace-pre-wrap break-words">{msg.content}</div>
+                ) : (
+                  <div className="prose prose-sm max-w-none dark:prose-invert text-text-primary [&_pre]:bg-bg-base [&_pre]:rounded [&_pre]:p-2 [&_code]:text-accent-blue [&_code]:bg-bg-base [&_code]:rounded [&_code]:px-1 [&_a]:text-accent-blue">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {msg.content}
+                    </ReactMarkdown>
+                  </div>
+                )}
               </div>
             </div>
           ))
         )}
 
+        {/* Tool call status rows */}
+        {toolStatuses.map((t, i) => (
+          <div key={i} className="flex gap-3">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-bg-surface">
+              <Wrench size={14} className="text-accent-yellow" />
+            </div>
+            <div className="rounded-xl bg-bg-surface border border-border-default px-3.5 py-2 text-xs text-text-secondary flex items-center gap-2">
+              {t.done ? (
+                <span className="text-accent-green">✓</span>
+              ) : (
+                <Loader2 size={10} className="animate-spin text-accent-yellow" />
+              )}
+              <span>{t.done ? `已完成: ${t.name}` : `正在调用: ${t.name}...`}</span>
+            </div>
+          </div>
+        ))}
+
         {/* Typing indicator */}
-        {sending && (
+        {sending && toolStatuses.length === 0 && (
           <div className="flex gap-3">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-bg-surface">
               {agentEmoji ? (

@@ -16,10 +16,15 @@ import {
   Settings,
   User,
   Users,
+  PanelLeftClose,
 } from 'lucide-react'
 
+interface Props {
+  collapsed: boolean
+  onToggle: () => void
+}
 
-export default function Sidebar() {
+export default function Sidebar({ collapsed, onToggle }: Props) {
   const location = useLocation()
   const [user, setUser] = useState<AuthUser | null>(null)
   const [agentCount, setAgentCount] = useState<number>(0)
@@ -32,12 +37,10 @@ export default function Sidebar() {
   const isAdmin = user?.role === 'admin'
 
   const navSections = [
-    // Admin-only: 仪表盘放最上面
     ...(isAdmin ? [{
       label: '概览',
       items: [{ to: '/dashboard', icon: LayoutDashboard, label: '仪表盘' }],
     }] : []),
-    // Regular user visible sections
     {
       label: '技能',
       items: [
@@ -46,19 +49,20 @@ export default function Sidebar() {
         { to: '/files', icon: FolderOpen, label: '文件管理' },
       ],
     },
-    // Admin-only sections
-    ...(isAdmin ? [{
-      label: 'Agents',
-      items: [{ to: '/agents', icon: Bot, label: 'Agents', badgeKey: 'agents' }],
-    }] : []),
+    {
+      label: 'Agent',
+      items: [
+        { to: '/agents', icon: Bot, label: 'Agents', badgeKey: 'agents' },
+        { to: '/cron', icon: Clock, label: '定时任务' },
+        { to: '/api', icon: Code2, label: 'API 访问' },
+      ],
+    },
     ...(isAdmin ? [{
       label: '平台管理',
       items: [
         { to: '/channels', icon: Radio, label: '渠道管理' },
         { to: '/models', icon: Brain, label: 'AI 模型' },
         { to: '/knowledge', icon: BookOpen, label: '知识库' },
-        { to: '/cron', icon: Clock, label: '定时任务' },
-        { to: '/api', icon: Code2, label: 'API设定' },
       ],
     }] : []),
     ...(isAdmin ? [{
@@ -72,24 +76,61 @@ export default function Sidebar() {
     }] : []),
   ]
 
+  // Shared fade style for all label-type content
+  const labelStyle: React.CSSProperties = {
+    opacity: collapsed ? 0 : 1,
+    maxWidth: collapsed ? 0 : 160,
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    transition: 'opacity 0.25s ease, max-width 0.3s ease',
+    flexShrink: 0,
+  }
+
   return (
-    <aside className="flex w-56 flex-col bg-bg-elevated border-r border-border-default">
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-5 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent-blue text-sm font-bold text-white">
-          AC
+    <aside
+      style={{ width: collapsed ? 56 : 224, transition: 'width 0.3s ease' }}
+      className="flex flex-col bg-bg-elevated border-r border-border-default overflow-hidden shrink-0"
+    >
+      {/* Logo + toggle */}
+      <div className="flex items-center border-b border-border-default px-3 py-4 gap-2">
+        <div
+          onClick={collapsed ? onToggle : undefined}
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${collapsed ? 'cursor-pointer hover:ring-2 hover:ring-accent-blue/40' : ''}`}
+          title={collapsed ? '展开菜单' : undefined}
+        >
+          <img src="/logo.png" alt="AgentClaw" className="h-8 w-8 scale-150 object-contain" />
         </div>
-        <div>
-          <div className="text-sm font-semibold text-text-primary">AgentClaw</div>
-          <div className="text-xs text-text-secondary">多租户 Agent 平台</div>
-        </div>
+        {!collapsed && (
+          <>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-semibold text-text-primary truncate">AgentClaw</div>
+              <div className="text-xs text-text-secondary truncate">多租户 Agent 平台</div>
+            </div>
+            <button
+              onClick={onToggle}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-text-secondary hover:bg-bg-surface hover:text-text-primary transition-colors"
+              title="收起菜单"
+            >
+              <PanelLeftClose size={15} />
+            </button>
+          </>
+        )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-2">
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-2">
         {navSections.map(section => (
-          <div key={section.label} className="mb-4">
-            <div className="mb-1.5 px-3 text-xs font-medium uppercase tracking-wider text-text-tertiary">
+          <div key={section.label} className="mb-3">
+            <div style={{
+              ...labelStyle,
+              maxWidth: collapsed ? 0 : 200,
+              marginBottom: collapsed ? 0 : 4,
+              paddingLeft: 8,
+              fontSize: 11,
+              fontWeight: 500,
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+            }} className="text-text-tertiary">
               {section.label}
             </div>
             {section.items.map(item => {
@@ -100,16 +141,25 @@ export default function Sidebar() {
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                  title={collapsed ? item.label : undefined}
+                  className={`flex items-center gap-3 rounded-lg py-2 px-2 text-sm transition-colors ${
                     isActive
                       ? 'bg-accent-blue/15 text-accent-blue'
                       : 'text-text-secondary hover:bg-bg-surface hover:text-text-primary'
                   }`}
                 >
-                  <Icon size={18} />
-                  <span>{item.label}</span>
+                  <Icon size={18} className="shrink-0" />
+                  <span style={labelStyle}>
+                    {item.label}
+                  </span>
                   {'badgeKey' in item && item.badgeKey === 'agents' && agentCount > 0 && (
-                    <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent-blue/20 px-1 text-xs text-accent-blue">
+                    <span style={{
+                      opacity: collapsed ? 0 : 1,
+                      maxWidth: collapsed ? 0 : 40,
+                      overflow: 'hidden',
+                      transition: 'opacity 0.25s ease, max-width 0.3s ease',
+                      flexShrink: 0,
+                    }} className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent-blue/20 px-1 text-xs text-accent-blue">
                       {agentCount}
                     </span>
                   )}
@@ -123,23 +173,24 @@ export default function Sidebar() {
       {/* User */}
       <NavLink
         to="/profile"
-        className={`border-t border-border-default px-4 py-3 flex items-center gap-3 transition-colors ${
+        title={collapsed ? (user?.username ?? '') : undefined}
+        className={`border-t border-border-default py-3 px-2 flex items-center gap-3 transition-colors ${
           location.pathname === '/profile'
             ? 'bg-accent-blue/15 text-accent-blue'
             : 'text-text-primary hover:bg-bg-surface'
         }`}
       >
-        <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium text-white ${
+        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-medium text-white ${
           isAdmin ? 'bg-accent-green' : 'bg-accent-purple'
         }`}>
           <User size={16} />
         </div>
-        <div>
-          <div className="text-sm font-medium">
+        <div style={labelStyle}>
+          <div className="text-sm font-medium truncate">
             {user?.username ?? 'Loading...'}
             {isAdmin && <span className="ml-1 text-xs text-accent-green">(管理员)</span>}
           </div>
-          <div className="text-xs text-text-secondary">{user?.email ?? ''}</div>
+          <div className="text-xs text-text-secondary truncate">{user?.email ?? ''}</div>
         </div>
       </NavLink>
     </aside>

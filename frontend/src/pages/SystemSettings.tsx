@@ -38,13 +38,19 @@ export default function SystemSettings() {
   const [gatewayPort, setGatewayPort] = useState('')
   const [allowedOrigins, setAllowedOrigins] = useState('')
 
+  // Platform config
+  const [maxAgents, setMaxAgents] = useState(5)
+  const [maxAgentsInput, setMaxAgentsInput] = useState('5')
+  const [savingMaxAgents, setSavingMaxAgents] = useState(false)
+
   const loadData = async () => {
     setLoading(true)
     setError('')
     try {
-      const [statusData, configData] = await Promise.all([
+      const [statusData, configData, platformConfig] = await Promise.all([
         getStatus(),
         fetchJSON<{ config: OpenClawConfig }>('/api/openclaw/settings/config').catch(() => ({ config: null })),
+        fetchJSON<{ max_agents_per_user: number }>('/api/admin/config').catch(() => null),
       ])
       setStatus(statusData)
       if (configData.config) {
@@ -56,10 +62,33 @@ export default function SystemSettings() {
           (cfg.gateway?.controlUi?.allowedOrigins || []).join('\n')
         )
       }
+      if (platformConfig) {
+        setMaxAgents(platformConfig.max_agents_per_user)
+        setMaxAgentsInput(String(platformConfig.max_agents_per_user))
+      }
     } catch (err: any) {
       setError(err?.message || '加载失败')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSaveMaxAgents = async () => {
+    const val = parseInt(maxAgentsInput, 10)
+    if (!val || val < 1) return
+    setSavingMaxAgents(true)
+    try {
+      const res = await fetchJSON<{ max_agents_per_user: number }>('/api/admin/config', {
+        method: 'PUT',
+        body: JSON.stringify({ max_agents_per_user: val }),
+      })
+      setMaxAgents(res.max_agents_per_user)
+      setMaxAgentsInput(String(res.max_agents_per_user))
+      flash('已保存')
+    } catch (err: any) {
+      setError(err?.message || '保存失败')
+    } finally {
+      setSavingMaxAgents(false)
     }
   }
 
@@ -218,6 +247,43 @@ export default function SystemSettings() {
               />
               <p className="mt-1 text-[11px] text-text-secondary">
                 每行一个 URL，用于 Control UI 的跨域访问控制
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Platform Config */}
+        <section className="rounded-xl border border-border-default bg-bg-surface overflow-hidden">
+          <div className="px-5 py-3 border-b border-border-default flex items-center gap-2">
+            <Shield size={16} className="text-text-secondary" />
+            <h2 className="text-sm font-semibold text-text-primary">平台配置</h2>
+          </div>
+          <div className="px-5 py-4 space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-text-secondary mb-1">
+                每用户最多 Agent 数
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={maxAgentsInput}
+                  onChange={e => setMaxAgentsInput(e.target.value)}
+                  className="w-28 rounded-lg border border-border-default bg-bg-base px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-blue"
+                />
+                <button
+                  onClick={handleSaveMaxAgents}
+                  disabled={savingMaxAgents}
+                  className="flex items-center gap-1.5 rounded-lg bg-accent-blue px-4 py-2 text-xs font-medium text-white hover:bg-accent-blue/90 transition-colors disabled:opacity-50"
+                >
+                  {savingMaxAgents ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+                  保存
+                </button>
+                <span className="text-xs text-text-secondary">当前值：{maxAgents}</span>
+              </div>
+              <p className="mt-1 text-[11px] text-text-secondary">
+                仅影响新建操作，已有 Agent 不受影响。重启服务后恢复为环境变量值。
               </p>
             </div>
           </div>

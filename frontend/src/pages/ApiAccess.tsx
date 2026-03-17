@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { generateApiToken } from '../lib/api'
-import { Key, Copy, Check, RefreshCw } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { generateApiToken, listMyAgents } from '../lib/api'
+import { Key, Copy, Check, RefreshCw, Bot } from 'lucide-react'
 
 const AGENT_EXAMPLE = `import json
 import time
@@ -128,6 +128,14 @@ export default function ApiAccess() {
   const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
+  const [defaultAgentId, setDefaultAgentId] = useState<string | null>(null)
+
+  useEffect(() => {
+    listMyAgents().then(r => {
+      const def = r.agents.find(a => a.is_default) || r.agents[0]
+      if (def) setDefaultAgentId(def.openclaw_agent_id)
+    }).catch(() => {})
+  }, [])
 
   async function handleGenerate() {
     setLoading(true)
@@ -202,6 +210,31 @@ export default function ApiAccess() {
           </button>
         )}
       </div>
+
+      {/* Default Agent ID */}
+      {defaultAgentId && (
+        <div className="rounded-xl border border-border-default bg-bg-surface p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Bot size={20} className="text-accent-blue" />
+            <h2 className="text-lg font-semibold text-text-primary">默认 Agent ID</h2>
+          </div>
+          <p className="text-sm text-text-secondary mb-3">
+            调用 API 时用此 Agent ID 指定您的 Agent。
+          </p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 rounded-lg bg-bg-base px-4 py-3 text-sm text-accent-blue font-mono break-all border border-border-default">
+              {defaultAgentId}
+            </code>
+            <button
+              onClick={() => copyToClipboard(defaultAgentId, 'agentid')}
+              className="shrink-0 rounded-lg bg-bg-base border border-border-default px-3 py-3 text-text-secondary hover:text-text-primary transition-colors"
+              title="复制"
+            >
+              {copied === 'agentid' ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* CLI Usage */}
       <div className="rounded-xl border border-border-default bg-bg-surface p-6">

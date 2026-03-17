@@ -7,11 +7,21 @@ export async function fetchAgents() {
 
 export async function fetchAgentDetail(agentId: string) {
   const filesResult = await api.listAgentFiles(agentId)
-  return {
-    agentId,
-    workspace: filesResult?.workspace || '',
-    files: filesResult?.files || [],
-  }
+  // Bridge returns a flat array: [{name, path, type, size, modified}]
+  const isArray = Array.isArray(filesResult)
+  const files = isArray
+    ? (filesResult as any[])
+        .filter((f: any) => f.type === 'file')
+        .map((f: any) => ({
+          name: f.name,
+          path: f.path,
+          missing: false,
+          size: f.size ?? 0,
+          updatedAtMs: f.modified ? new Date(f.modified).getTime() : 0,
+        }))
+    : ((filesResult as any)?.files || [])
+  const workspace = isArray ? '' : ((filesResult as any)?.workspace || '')
+  return { agentId, workspace, files }
 }
 
 export async function createNewAgent(name: string, workspace?: string, installedSkills?: string[], model?: string) {

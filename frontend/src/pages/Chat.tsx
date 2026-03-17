@@ -14,6 +14,8 @@ import {
   X,
   FileText,
 } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import {
   listSessions,
   getSession,
@@ -115,7 +117,13 @@ export default function Chat() {
         listSessions(undefined, AgentScope.Self),
         listAgents(AgentScope.Self)
       ])
-      setSessions(sessionsResult)
+      // Sort newest first by updated_at, fall back to created_at
+      const sorted = [...sessionsResult].sort((a, b) => {
+        const at = a.updated_at || a.created_at || ''
+        const bt = b.updated_at || b.created_at || ''
+        return bt.localeCompare(at)
+      })
+      setSessions(sorted)
       setAgents(agentsResult.agents || [])
     } catch {
       setSessions([])
@@ -128,13 +136,20 @@ export default function Chat() {
     fetchSessions()
   }, [fetchSessions])
 
-  // Restore session from URL param
+  // Restore session from URL param, or auto-select most recent
   useEffect(() => {
     const sessionKey = searchParams.get('session')
     if (sessionKey && sessionKey !== activeSessionKey) {
       loadSession(sessionKey)
     }
   }, [searchParams])
+
+  // Auto-select most recent session when sessions load and no active session
+  useEffect(() => {
+    if (!sessionsLoading && sessions.length > 0 && !activeSessionKey && !searchParams.get('session')) {
+      loadSession(sessions[0].key)
+    }
+  }, [sessionsLoading, sessions]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadSession = async (key: string) => {
     setActiveSessionKey(key)
@@ -643,9 +658,13 @@ export default function Chat() {
                             : 'bg-bg-surface border border-border-default text-text-primary'
                         }`}
                       >
-                        <div className="text-sm whitespace-pre-wrap break-words">
-                          {msg.content}
-                        </div>
+                        {msg.role === 'user' ? (
+                          <div className="text-sm whitespace-pre-wrap break-words">{msg.content}</div>
+                        ) : (
+                          <div className="text-sm prose prose-sm max-w-none dark:prose-invert text-text-primary [&_pre]:bg-bg-base [&_pre]:rounded [&_pre]:p-2 [&_pre]:overflow-x-auto [&_code]:text-accent-blue [&_code]:bg-bg-base [&_code]:rounded [&_code]:px-1 [&_a]:text-accent-blue [&_ul]:list-disc [&_ol]:list-decimal [&_li]:ml-4">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                          </div>
+                        )}
                         {msg.timestamp && (
                           <div className={`text-[10px] mt-1 ${
                             msg.role === 'user' ? 'text-white/60' : 'text-text-secondary'

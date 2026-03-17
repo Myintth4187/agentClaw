@@ -2,17 +2,20 @@ import { useState, useEffect } from 'react'
 import {
   listSkills, searchSkills, installSkill, toggleSkill,
   listCuratedSkills, installCuratedSkill, submitSkill, submitSkillWithFile, mySubmissions,
-  listPlatformSkills, copySkillToWorkspace,
+  listPlatformSkills, copySkillToWorkspace, listMyAgents,
 } from '../lib/api'
-import type { Skill, SkillSearchResult, CuratedSkill, SkillSubmission, PlatformSkill } from '../lib/api'
+import type { Skill, SkillSearchResult, CuratedSkill, SkillSubmission, PlatformSkill, UserAgentRecord } from '../lib/api'
 import {
   Zap, Loader2, Search, Download, ExternalLink, Check,
-  AlertTriangle, Star, Send, Package,
+  AlertTriangle, Star, Send, Package, Sparkles, MessageSquare,
 } from 'lucide-react'
+import { useChat } from '../components/Layout'
 
 type Tab = 'curated' | 'search' | 'installed' | 'platform'
 
 export default function SkillStore() {
+  const { openChat } = useChat()
+  const [defaultAgent, setDefaultAgent] = useState<UserAgentRecord | null>(null)
   const [tab, setTab] = useState<Tab>('curated')
 
   // Installed skills
@@ -80,6 +83,10 @@ export default function SkillStore() {
       .finally(() => setLoadingSkills(false))
     refreshCurated()
     refreshPlatform()
+    listMyAgents().then(r => {
+      const def = r.agents.find(a => a.is_default) || r.agents[0] || null
+      setDefaultAgent(def)
+    }).catch(() => {})
   }, [])
 
   const handleSearch = async (e?: React.FormEvent) => {
@@ -232,11 +239,22 @@ export default function SkillStore() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-text-primary">技能商店</h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          发现、安装和管理 AI 技能扩展
-        </p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary">技能商店</h1>
+          <p className="mt-1 text-sm text-text-secondary">
+            发现、安装和管理 AI 技能扩展
+          </p>
+        </div>
+        <button
+          onClick={() => defaultAgent && openChat({ agentId: defaultAgent.openclaw_agent_id, agentName: defaultAgent.name })}
+          disabled={!defaultAgent}
+          className="flex items-center gap-2 rounded-xl border border-accent-purple/30 bg-accent-purple/10 px-4 py-2.5 text-sm font-medium text-accent-purple hover:bg-accent-purple/20 transition-colors disabled:opacity-40"
+        >
+          <Sparkles size={16} />
+          AI 创建技能
+          <MessageSquare size={14} className="opacity-60" />
+        </button>
       </div>
 
       {/* Tabs */}

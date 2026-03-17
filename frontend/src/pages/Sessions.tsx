@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { listSessions, deleteSession, getSession, listAgents } from '../lib/api'
-import type { Session, SessionDetail, AgentInfo } from '../lib/api'
+import { listSessions, deleteSession, getSession, listAgents, adminListUsers, adminListUserAgents } from '../lib/api'
+import type { Session, SessionDetail, AgentInfo, AdminUserSummary, AdminUserAgentMapping } from '../lib/api'
 import {
   Clock,
   Loader2,
@@ -24,6 +24,11 @@ export default function Sessions() {
   const [selectedAgentId, setSelectedAgentId] = useState<string>('')
   const [isAdmin, setIsAdmin] = useState(false)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
+
+  // Admin: user filter
+  const [adminUsers, setAdminUsers] = useState<AdminUserSummary[]>([])
+  const [userAgentMappings, setUserAgentMappings] = useState<AdminUserAgentMapping[]>([])
+  const [selectedUserId, setSelectedUserId] = useState<string>('')
 
   const fetchSessionList = () => {
     setLoading(true)
@@ -50,9 +55,27 @@ export default function Sessions() {
     // Check if user is admin and fetch agents list
     listAgents().then(r => {
       setAgents(r.agents || [])
-      setIsAdmin(r.agents?.some((a: AgentInfo) => a.id === 'main') || false)
+      const isAdminUser = r.agents?.some((a: AgentInfo) => a.id === 'main') || false
+      setIsAdmin(isAdminUser)
+      // Fetch admin data if admin
+      if (isAdminUser) {
+        adminListUsers().then(setAdminUsers).catch(() => {})
+        adminListUserAgents().then(setUserAgentMappings).catch(() => {})
+      }
     }).catch(() => {})
   }, [])
+
+  // When user filter changes, update agent filter
+  useEffect(() => {
+    if (selectedUserId) {
+      // Find this user's agent IDs
+      const userAgents = userAgentMappings.filter(m => m.user_id === selectedUserId)
+      // Use the first one as filter (or empty to show all of theirs)
+      setSelectedAgentId(userAgents[0]?.openclaw_agent_id || '')
+    } else {
+      setSelectedAgentId('')
+    }
+  }, [selectedUserId, userAgentMappings])
 
   useEffect(() => {
     fetchSessionList()
@@ -107,12 +130,30 @@ export default function Sessions() {
             <p className="mt-1 text-sm text-text-secondary">查看所有 Agent 的对话记录</p>
           </div>
           <div className="flex items-center gap-3">
+            {/* User Selector for Admin */}
+            {isAdmin && adminUsers.length > 0 && (
+              <div className="relative">
+                <select
+                  value={selectedUserId}
+                  onChange={(e) => setSelectedUserId(e.target.value)}
+                  className="appearance-none rounded-lg border border-border-default bg-bg-surface px-3 py-1.5 pr-8 text-xs text-text-primary focus:border-accent-blue focus:outline-none"
+                >
+                  <option value="">所有用户</option>
+                  {adminUsers.map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.username}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none" />
+              </div>
+            )}
             {/* Agent Selector for Admin */}
             {isAdmin && agents.length > 0 && (
               <div className="relative">
                 <select
                   value={selectedAgentId}
-                  onChange={(e) => setSelectedAgentId(e.target.value)}
+                  onChange={(e) => { setSelectedAgentId(e.target.value); setSelectedUserId('') }}
                   className="appearance-none rounded-lg border border-border-default bg-bg-surface px-3 py-1.5 pr-8 text-xs text-text-primary focus:border-accent-blue focus:outline-none"
                 >
                   <option value="">所有 Agents</option>

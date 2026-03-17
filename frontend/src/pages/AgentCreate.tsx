@@ -1,76 +1,61 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Bot, Loader2, Cpu, Package } from 'lucide-react'
-import { createNewAgent } from '../store/agents'
-import { listModels, listCuratedSkills, type ModelChoice, type CuratedSkill } from '../lib/api'
+import { ArrowLeft, Bot, Loader2, Package } from 'lucide-react'
+import { createMyAgent, listCuratedSkills, type CuratedSkill } from '../lib/api'
+import { installCuratedSkill } from '../lib/api'
 
-// Convert display name to a valid agent ID (ASCII only, lowercase)
-function toAgentId(name: string): string {
-  // transliterate common CJK → pinyin-like slug is complex;
-  // just strip non-ASCII and collapse to dashes
-  const id = name
+// Generate a preview slug from the display name
+function toSlugPreview(name: string): string {
+  const slug = name
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9_-]+/g, '-')
     .replace(/^-+/, '')
     .replace(/-+$/, '')
-    .slice(0, 64)
-  return id || ''
+    .slice(0, 30)
+  return slug || ''
 }
 
 export default function AgentCreate() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [models, setModels] = useState<ModelChoice[]>([])
-  const [modelsLoading, setModelsLoading] = useState(true)
   const [curatedSkills, setCuratedSkills] = useState<CuratedSkill[]>([])
   const [curatedLoading, setCuratedLoading] = useState(true)
-  const WORKSPACE_PREFIX = '~/.openclaw/workspace_'
   const [form, setForm] = useState({
     displayName: '',
-    agentId: '',
-    agentIdManual: false, // true if user has manually edited the ID
-    workspaceSuffix: '',
-    installedSkills: [] as string[], // skill IDs to install for this agent
-    model: '', // selected model
+    description: '',
+    installedSkills: [] as string[], // curated skill IDs to install after creation
   })
 
-  // Fetch available models and curated skills on mount
+  // Fetch curated skills on mount
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const [modelsResult, curated] = await Promise.all([
-          listModels(),
-          listCuratedSkills(),
-        ])
-        setModels(modelsResult.models)
-        setCuratedSkills(curated.filter(s => s.installed === false)) // only show not installed
-      } catch (err) {
-        console.error('Failed to fetch data:', err)
-      } finally {
-        setModelsLoading(false)
-        setCuratedLoading(false)
-      }
-    }
-    fetchData()
+    listCuratedSkills()
+      .then(curated => setCuratedSkills(curated.filter(s => !s.installed)))
+      .catch(() => {})
+      .finally(() => setCuratedLoading(false))
   }, [])
 
-  const effectiveId = form.agentId || toAgentId(form.displayName)
-  const hasValidId = /^[a-z0-9][a-z0-9_-]*$/.test(effectiveId)
+  const slugPreview = toSlugPreview(form.displayName)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!effectiveId || !hasValidId) return
+    if (!form.displayName.trim()) return
 
     setLoading(true)
     setError('')
 
     try {
-      const suffix = form.workspaceSuffix.trim()
-      const workspace = suffix ? `${WORKSPACE_PREFIX}${suffix}` : undefined
-      await createNewAgent(effectiveId, workspace, form.installedSkills, form.model || undefined)
-      navigate('/agents')
+      const agent = await createMyAgent(form.displayName.trim(), form.description.trim() || undefined)
+      // Install selected curated skills
+      for (const skillId of form.installedSkills) {
+        try {
+          await installCuratedSkill(skillId)
+        } catch {
+          // ignore individual skill install failures
+        }
+      }
+      navigate(`/agents/${agent.openclaw_agent_id}`)
     } catch (err: any) {
       setError(err?.message || '创建失败，请重试')
     } finally {
@@ -108,97 +93,32 @@ export default function AgentCreate() {
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Display Name */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-text-primary">显示名称 *</label>
+            <label className="mb-1.5 block text-sm font-medium text-text-primary">Agent 名称 *</label>
             <input
               type="text"
               required
               value={form.displayName}
-              onChange={e => {
-                const val = e.target.value
-                setForm(f => ({
-                  ...f,
-                  displayName: val,
-                  // Auto-sync agent ID if user hasn't manually edited it
-                  ...(f.agentIdManual ? {} : { agentId: '' }),
-                }))
-              }}
+              onChange={e => setForm(f => ({ ...f, displayName: e.target.value }))}
               placeholder="例如：保险智能体、Customer Support"
               className="w-full rounded-lg border border-border-default bg-bg-base px-4 py-2.5 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary"
             />
+            {slugPreview && (
+              <p className="mt-1 text-xs text-text-tertiary">
+                ID 预览：<code className="font-mono">{slugPreview}-xxxx</code>（系统自动生成）
+              </p>
+            )}
           </div>
 
-          {/* Agent ID */}
+          {/* Description */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-text-primary">Agent ID *</label>
+            <label className="mb-1.5 block text-sm font-medium text-text-primary">描述（可选）</label>
             <input
               type="text"
-              value={form.agentId || (form.agentIdManual ? '' : toAgentId(form.displayName))}
-              onChange={e => setForm(f => ({ ...f, agentId: e.target.value, agentIdManual: true }))}
-              placeholder="insurance-agent"
-              className={`w-full rounded-lg border bg-bg-base px-4 py-2.5 text-sm text-text-primary outline-none placeholder:text-text-secondary ${
-                effectiveId && !hasValidId
-                  ? 'border-accent-red focus:border-accent-red'
-                  : 'border-border-default focus:border-accent-blue'
-              }`}
+              value={form.description}
+              onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+              placeholder="简短描述这个 Agent 的用途"
+              className="w-full rounded-lg border border-border-default bg-bg-base px-4 py-2.5 text-sm text-text-primary outline-none focus:border-accent-blue placeholder:text-text-secondary"
             />
-            <p className="mt-1 text-xs text-text-secondary">
-              仅支持小写字母、数字、下划线和连字符（a-z, 0-9, _, -）
-              {form.displayName && !form.agentIdManual && !toAgentId(form.displayName) && (
-                <span className="text-accent-yellow ml-1">— 请手动输入英文 ID</span>
-              )}
-            </p>
-          </div>
-
-          {/* Workspace */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-text-primary">工作区路径</label>
-            <div className="flex items-center rounded-lg border border-border-default bg-bg-base overflow-hidden focus-within:border-accent-blue">
-              <span className="shrink-0 px-3 py-2.5 text-sm text-text-secondary select-none border-r border-border-default bg-bg-surface">
-                {WORKSPACE_PREFIX}
-              </span>
-              <input
-                type="text"
-                value={form.workspaceSuffix}
-                onChange={e => setForm(f => ({ ...f, workspaceSuffix: e.target.value }))}
-                placeholder={effectiveId || '<agent-id>'}
-                className="flex-1 bg-transparent px-3 py-2.5 text-sm text-text-primary outline-none placeholder:text-text-secondary"
-              />
-            </div>
-            <p className="mt-1 text-xs text-text-secondary">留空则自动生成</p>
-          </div>
-
-          {/* Model Selection */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-text-primary">
-              <div className="flex items-center gap-2">
-                <Cpu size={14} />
-                选择模型
-              </div>
-            </label>
-            {modelsLoading ? (
-              <div className="flex items-center gap-2 text-sm text-text-secondary">
-                <Loader2 size={14} className="animate-spin" />
-                加载中...
-              </div>
-            ) : models.length === 0 ? (
-              <p className="text-sm text-text-secondary">暂无可用模型</p>
-            ) : (
-              <select
-                value={form.model}
-                onChange={e => setForm(f => ({ ...f, model: e.target.value }))}
-                className="w-full rounded-lg border border-border-default bg-bg-base px-4 py-2.5 text-sm text-text-primary outline-none focus:border-accent-blue"
-              >
-                <option value="">默认模型</option>
-                {models.map(model => (
-                  <option key={model.id} value={model.id}>
-                    {model.name} ({model.provider})
-                  </option>
-                ))}
-              </select>
-            )}
-            <p className="mt-1 text-xs text-text-secondary">
-              留空使用平台默认模型
-            </p>
           </div>
 
           {/* Install Curated Skills */}
@@ -264,19 +184,11 @@ export default function AgentCreate() {
             </p>
           </div>
 
-          {/* Info box */}
-          <div className="rounded-lg bg-accent-blue/10 p-4 text-sm text-accent-blue">
-            创建后将调用：<code className="rounded bg-bg-base px-1.5 py-0.5 text-xs">
-              agents.create(name: "{effectiveId || '<agent-id>'}"
-              {form.workspaceSuffix.trim() ? `, workspace: "${WORKSPACE_PREFIX}${form.workspaceSuffix.trim()}"` : ''})
-            </code>
-          </div>
-
           {/* Submit */}
           <div className="flex gap-3 pt-2">
             <button
               type="submit"
-              disabled={loading || !effectiveId || !hasValidId}
+              disabled={loading || !form.displayName.trim()}
               className="flex items-center gap-2 rounded-lg bg-accent-blue px-6 py-2.5 text-sm font-medium text-white hover:bg-accent-blue/90 disabled:opacity-50 transition-colors"
             >
               {loading && <Loader2 size={16} className="animate-spin" />}
