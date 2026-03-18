@@ -1,21 +1,24 @@
 # AgentClaw - OpenClaw 多用户 Agent 平台（面向小团队）
 
+![AgentClaw Logo](frontend/public/logo.png)
+
 [English README](README.md)
 
+通过各种开源项目的启发与学习，各种vibe后攒了一个这个，希望对大家有用。
 把 **OpenClaw 的单用户 Agents** 升级为 **多用户可用的 Agent 平台**，提供统一入口、用户隔离、共享实例、动态沙盒与安全治理能力，适合小团队快速搭建内部 Agent 平台。
 
 **AgentClaw** 提供多用户的 Agent 运行与治理能力。每个用户在独立的 Docker 沙盒中运行自己的 Agent 会话与工作流。
 
-采用 **frameClaw** 多租户架构 —— 基于 OpenClaw 实现共享实例 + 动态沙盒的租户隔离方案。
+多租户架构，基于 OpenClaw 与生俱来的能力实现共享实例 + 动态agent沙盒的租户隔离方案。
 
 ## 核心特性
 
+- **🔌 零侵入集成** - 不修改 OpenClaw 源码，通过 Bridge 层实现多租户，理论上可随openclaw更新
 - **🧩 多用户 Agent 平台** - 小团队统一入口、用户隔离、Agent 生命周期管理
 - **🐳 严格沙盒隔离** - 每用户独立 Docker 容器，预装 Python/Node/工具链
 - **🌐 网络访问** - 支持 API 调用、包安装、网络爬取
 - **🔒 安全治理** - 自动化安全审查与最小权限能力限制
 - **📦 资产沉淀** - 技能/工作流/工具可复用并共享到平台
-- **🔌 零侵入集成** - 不修改 OpenClaw 源码，通过 Bridge 层实现多租户
 
 ## 系统架构
 
@@ -130,15 +133,25 @@ cp .env.example .env
 ### 启动
 
 ```bash
-# 构建镜像
-docker build -t openclaw:latest ./bridge/
-docker build -t openclaw-sandbox:agentclaw ./sandbox/
+# 可选：环境检查
+python prepare.py
 
 # 启动服务
+## 首次启动
+docker compose up -d --build
+## 镜像构建过的话
 docker compose up -d
 ```
 
 访问 http://127.0.0.1:3080
+
+## 部署说明
+
+- AgentClaw **基于 OpenClaw 官方依赖包**，**无需修改 OpenClaw 源码**。
+- 可直接用 Docker Compose 部署；`--build` 可确保 Dockerfile 或源码变更后镜像重建。
+- `prepare.py` 用于启动前环境检查与提示。
+- 用户文件持久化在宿主机（如 `~/.openclaw` 与 Docker 卷），删除这些数据会导致用户数据丢失。
+- 默认 OpenClaw 版本为 **2026.3.8**（构建参数 `OPENCLAW_VERSION`）。如需升级/降级，在 `.env` 设置 `OPENCLAW_VERSION` 后执行 `docker compose up -d --build`。
 
 ## 平台使用（技能只是其中一部分）
 
@@ -212,14 +225,23 @@ timeout 30 python3 scripts/main.py
 
 ## 技术亮点
 
-AgentClaw 的 **frameClaw** 多租户架构实现：
-
-- **共享实例** - 单 OpenClaw Gateway 服务多租户，资源高效利用
+AgentClaw 的架构实现：
+- **零侵入集成** - 不修改 OpenClaw 源码，通过 Bridge 适配层实现多租户，理论上随openclaw更新
+- **共享实例** - 单 OpenClaw Gateway 服务多租户，对小团队来说资源高效利用
 - **动态沙盒** - 按需创建/销毁 Docker 容器执行环境
-- **零侵入集成** - 不修改 OpenClaw 源码，通过 Bridge 适配层实现多租户
 - **安全隔离** - JWT 认证、API Key 代理、文件系统隔离
 
 这套架构设计可适配其他 Agent 引擎，面向企业内部 Agent 平台/多租户 AI 平台场景。
+
+
+
+## 联系方式
+
+- 微信号：`wdyt1008521`
+- 邮箱：`wuding129@163.com`
+- 微信群二维码：
+
+![微信群二维码](docs/assets/wechat_group.jpg)
 
 ## License
 

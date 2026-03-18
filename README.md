@@ -1,5 +1,7 @@
 # AgentClaw - OpenClaw Multi-User Agent Platform (for Small Teams)
 
+![AgentClaw Logo](frontend/public/logo.png)
+
 [中文版 README](README_CN.md)
 
 Upgrade **OpenClaw's single-user agents** into a **multi-user agent platform** with a unified entry, user isolation, shared instances, dynamic sandboxes, and security governance. Built for small teams to spin up an internal agent platform quickly.
@@ -130,15 +132,25 @@ cp .env.example .env
 ### Run
 
 ```bash
-# build images
-docker build -t openclaw:latest ./bridge/
-docker build -t openclaw-sandbox:agentclaw ./sandbox/
+# optional: environment check
+python prepare.py
 
-# start services
+# build (if needed) and start services
+# first run (or when Dockerfile/source changed)
+docker compose up -d --build
+# if images are already built
 docker compose up -d
 ```
 
 Visit http://127.0.0.1:3080
+
+## Deployment Notes
+
+- AgentClaw is **based on the official OpenClaw packages** and **does not require any OpenClaw source modifications**.
+- You can deploy directly with Docker Compose; `--build` ensures images are rebuilt when Dockerfiles or source change.
+- `prepare.py` helps validate Docker and `.env` before starting.
+- User files are persisted on the host (for example `~/.openclaw` and Docker volumes). Removing those will delete data.
+- Default OpenClaw version is **2026.3.8** (build arg `OPENCLAW_VERSION`). To change it, set `OPENCLAW_VERSION` in `.env` and rerun `docker compose up -d --build`.
 
 ## Platform Usage (Skills Are Only One Part)
 
@@ -210,14 +222,23 @@ Creating/updating a skill triggers automated security checks.
 
 ## Highlights
 
-AgentClaw's **frameClaw** multi-tenant architecture enables:
+AgentClaw architecture highlights:
 
+- **Zero-Intrusion Integration** - No OpenClaw source changes; Bridge adapter only
 - **Shared Instance** - Single OpenClaw Gateway serving multiple users efficiently
 - **Dynamic Sandbox** - On-demand Docker environments
-- **Zero-Intrusion Integration** - No OpenClaw source changes; Bridge adapter only
 - **Security Isolation** - JWT auth, API key proxying, filesystem isolation
 
 This architecture can be adapted to other agent engines for internal agent platforms or multi-tenant AI platforms.
+
+
+## Contact
+
+- WeChat: `wdyt1008521`
+- Email: `wuding129@163.com`
+- WeChat Group QR:
+
+![WeChat Group QR](docs/assets/wechat_group.jpg)
 
 ## License
 

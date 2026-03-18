@@ -53,4 +53,4 @@ config/
 
 例如 SkillClaw 部署：
 - `SOUL.md` → "你是 SkillClaw，技能创作助手"
-- `AGENTS.md` → 精简版，去掉群聊规则，强调技能开发工作流
+- `AGENTS.md` → 精简版，强调技能开发工作流

@@ -19,7 +19,7 @@ services:
       POSTGRES_PASSWORD: frameclaw
       POSTGRES_DB: frameclaw_platform
     ports:
-      - "15432:5432"
+      - "15433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
@@ -34,6 +34,10 @@ services:
   openclaw-shared:
     container_name: openclaw-shared
     image: ${OPENCLAW_IMAGE:-openclaw:latest}
+    build:
+      context: ./bridge
+      args:
+        OPENCLAW_VERSION: ${OPENCLAW_VERSION:-2026.3.8}
     command: ["node", "dist/start.js"]
     environment:
       FRAMECLAW_PROXY__URL: "http://gateway:8080/llm/v1"
@@ -126,6 +130,16 @@ services:
       - openclaw-external
     depends_on:
       - gateway
+
+  # Build sandbox image automatically (used by per-agent containers)
+  sandbox-image:
+    container_name: openclaw-sandbox-image
+    image: openclaw-sandbox:agentclaw
+    build: ./sandbox
+    command: ["true"]
+    restart: "no"
+    networks:
+      - openclaw-internal
 
 networks:
   openclaw-internal:
