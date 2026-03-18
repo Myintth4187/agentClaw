@@ -133,6 +133,17 @@ Default sandbox image config:
 
 ## Quick Start (Run AgentClaw)
 
+### Demo
+
+Try it now: **https://agent.428916.xyz**
+
+| Role | Username | Password |
+|------|----------|----------|
+| Admin | admin | 123456 |
+| User | user | 123456 |
+
+> Note: Demo branch limits to 3 users (1 admin + 2 regular users). [Source code](https://github.com/wuding129/agentClaw/tree/demo)
+
 Built for small teams: this repo provides a ready-to-run multi-user agent platform example.
 
 ### Requirements
