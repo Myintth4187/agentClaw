@@ -23,6 +23,55 @@
 - **📦 资产沉淀** - 技能/工作流/工具可复用并共享到平台
 - **🧩 自由组合** - 支持定制多种 Agent，面向自己或团队共享，技能包可自由组合与复用
 
+## 快速开始
+
+### 在线演示
+
+立即体验：**https://agent.428916.xyz**
+
+| 角色 | 用户名 | 密码 |
+|------|--------|------|
+| 管理员 | admin | 123456 |
+| 普通用户 | user | 123456 |
+
+> 注意：Demo 分支限制最多 3 个用户（1 管理员 + 2 普通用户）。[源码](https://github.com/wuding129/agentClaw/tree/demo)
+
+### 环境要求
+
+- Docker & Docker Compose
+- 至少一个 LLM API Key (Anthropic/OpenAI/DashScope 等)
+
+### 配置
+
+```bash
+cp .env.example .env
+# 编辑 .env，添加 LLM API Keys
+```
+
+### 启动
+
+```bash
+# 可选：环境检查
+python prepare.py
+
+# 启动服务
+## 首次启动
+docker compose up -d --build
+## 镜像构建过的话
+docker compose up -d
+```
+
+访问 http://127.0.0.1:3080
+
+## 部署说明
+
+- AgentClaw **基于 OpenClaw 官方依赖包**，**无需修改 OpenClaw 源码**。
+- 可直接用 Docker Compose 部署；`--build` 可确保 Dockerfile 或源码变更后镜像重建。
+- `prepare.py` 用于启动前环境检查与提示。
+- 用户文件持久化在宿主机（如 `~/.openclaw` 与 Docker 卷），删除这些数据会导致用户数据丢失。
+- 默认 OpenClaw 版本为 **2026.3.8**（构建参数 `OPENCLAW_VERSION`）。如需升级/降级，在 `.env` 设置 `OPENCLAW_VERSION` 后执行 `docker compose up -d --build`。
+> 注意：**首个注册用户默认成为管理员**。
+
 ## 系统架构
 
 AgentClaw 基于openclaw为基础采用多租户架构：共享openclaw实例 + 动态agent沙盒：
@@ -130,57 +179,6 @@ OpenClaw 原生支持多 Agent，AgentClaw 利用此能力实现租户隔离：
   }
 }
 ```
-
-## 快速开始（运行 AgentClaw 示例）
-
-### 在线演示
-
-立即体验：**https://agent.428916.xyz**
-
-| 角色 | 用户名 | 密码 |
-|------|--------|------|
-| 管理员 | admin | 123456 |
-| 普通用户 | user | 123456 |
-
-> 注意：Demo 分支限制最多 3 个用户（1 管理员 + 2 普通用户）。[源码](https://github.com/wuding129/agentClaw/tree/demo)
-
-面向小团队的快速搭建：本项目提供一套可直接落地的多用户 Agent 平台示例。
-
-### 环境要求
-
-- Docker & Docker Compose
-- 至少一个 LLM API Key (Anthropic/OpenAI/DashScope 等)
-
-### 配置
-
-```bash
-cp .env.example .env
-# 编辑 .env，添加 LLM API Keys
-```
-
-### 启动
-
-```bash
-# 可选：环境检查
-python prepare.py
-
-# 启动服务
-## 首次启动
-docker compose up -d --build
-## 镜像构建过的话
-docker compose up -d
-```
-
-访问 http://127.0.0.1:3080
-
-## 部署说明
-
-- AgentClaw **基于 OpenClaw 官方依赖包**，**无需修改 OpenClaw 源码**。
-- 可直接用 Docker Compose 部署；`--build` 可确保 Dockerfile 或源码变更后镜像重建。
-- `prepare.py` 用于启动前环境检查与提示。
-- 用户文件持久化在宿主机（如 `~/.openclaw` 与 Docker 卷），删除这些数据会导致用户数据丢失。
-- 默认 OpenClaw 版本为 **2026.3.8**（构建参数 `OPENCLAW_VERSION`）。如需升级/降级，在 `.env` 设置 `OPENCLAW_VERSION` 后执行 `docker compose up -d --build`。
-> 注意：**首个注册用户默认成为管理员**。
 
 ## 平台使用（技能只是其中一部分）
 

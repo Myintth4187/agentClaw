@@ -23,6 +23,55 @@ Built on OpenClaw with a multi-tenant architecture — shared OpenClaw instances
 - **🧩 Composable Agents** - Customize agents for yourself or your team, and freely combine reusable skill packs
 - **🔌 Zero-Intrusion Integration** - No OpenClaw source modifications; multi-user via Bridge layer
 
+## Quick Start
+
+### Demo
+
+Try it now: **https://agent.428916.xyz**
+
+| Role | Username | Password |
+|------|----------|----------|
+| Admin | admin | 123456 |
+| User | user | 123456 |
+
+> Note: Demo branch limits to 3 users (1 admin + 2 regular users). [Source code](https://github.com/wuding129/agentClaw/tree/demo)
+
+### Requirements
+
+- Docker & Docker Compose
+- At least one LLM API key (Anthropic/OpenAI/DashScope, etc.)
+
+### Setup
+
+```bash
+cp .env.example .env
+# edit .env and add LLM API keys
+```
+
+### Run
+
+```bash
+# optional: environment check
+python prepare.py
+
+# build (if needed) and start services
+# first run (or when Dockerfile/source changed)
+docker compose up -d --build
+# if images are already built
+docker compose up -d
+```
+
+Visit http://127.0.0.1:3080
+
+## Deployment Notes
+
+- AgentClaw is **based on the official OpenClaw packages** and **does not require any OpenClaw source modifications**.
+- You can deploy directly with Docker Compose; `--build` ensures images are rebuilt when Dockerfiles or source change.
+- `prepare.py` helps validate Docker and `.env` before starting.
+- User files are persisted on the host (for example `~/.openclaw` and Docker volumes). Removing those will delete data.
+- Default OpenClaw version is **2026.3.8** (build arg `OPENCLAW_VERSION`). To change it, set `OPENCLAW_VERSION` in `.env` and rerun `docker compose up -d --build`.
+> Note: The **first registered user becomes admin** by default.
+
 ## Architecture
 
 AgentClaw uses a multi-tenant architecture on top of OpenClaw: shared OpenClaw instances + dynamic agent sandboxes:
@@ -130,57 +179,6 @@ Default sandbox image config:
   }
 }
 ```
-
-## Quick Start (Run AgentClaw)
-
-### Demo
-
-Try it now: **https://agent.428916.xyz**
-
-| Role | Username | Password |
-|------|----------|----------|
-| Admin | admin | 123456 |
-| User | user | 123456 |
-
-> Note: Demo branch limits to 3 users (1 admin + 2 regular users). [Source code](https://github.com/wuding129/agentClaw/tree/demo)
-
-Built for small teams: this repo provides a ready-to-run multi-user agent platform example.
-
-### Requirements
-
-- Docker & Docker Compose
-- At least one LLM API key (Anthropic/OpenAI/DashScope, etc.)
-
-### Setup
-
-```bash
-cp .env.example .env
-# edit .env and add LLM API keys
-```
-
-### Run
-
-```bash
-# optional: environment check
-python prepare.py
-
-# build (if needed) and start services
-# first run (or when Dockerfile/source changed)
-docker compose up -d --build
-# if images are already built
-docker compose up -d
-```
-
-Visit http://127.0.0.1:3080
-
-## Deployment Notes
-
-- AgentClaw is **based on the official OpenClaw packages** and **does not require any OpenClaw source modifications**.
-- You can deploy directly with Docker Compose; `--build` ensures images are rebuilt when Dockerfiles or source change.
-- `prepare.py` helps validate Docker and `.env` before starting.
-- User files are persisted on the host (for example `~/.openclaw` and Docker volumes). Removing those will delete data.
-- Default OpenClaw version is **2026.3.8** (build arg `OPENCLAW_VERSION`). To change it, set `OPENCLAW_VERSION` in `.env` and rerun `docker compose up -d --build`.
-> Note: The **first registered user becomes admin** by default.
 
 ## Platform Usage (Skills Are Only One Part)
 
