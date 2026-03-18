@@ -214,7 +214,10 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
     if await get_user_by_email(db, req.email):
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    user = await create_user(db, req.username, req.email, req.password)
+    try:
+        user = await create_user(db, req.username, req.email, req.password)
+    except ValueError as e:
+        raise HTTPException(status_code=403, detail=str(e))
 
     # Create default Agent for the new user
     agent = await _create_default_agent_for_user(

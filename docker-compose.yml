@@ -71,7 +71,7 @@ services:
     container_name: openclaw-gateway
     build: ./platform
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8084:8080"
     environment:
       PLATFORM_DATABASE_URL: postgresql+asyncpg://frameclaw:frameclaw@postgres:5432/frameclaw_platform
       PLATFORM_JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
@@ -125,7 +125,7 @@ services:
       args:
         VITE_API_URL: ${VITE_API_URL:-}
     ports:
-      - "3080:3000"
+      - "127.0.0.1:8085:3000"
     networks:
       - openclaw-external
     depends_on:

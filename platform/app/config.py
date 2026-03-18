@@ -74,6 +74,9 @@ class Settings(BaseSettings):
     # Agent limits
     max_agents_per_user: int = 5  # Can override with MAX_AGENTS_PER_USER env var
 
+    # User limits (demo mode: max 3 users - 1 admin + 2 regular users)
+    max_users: int = 3  # Can override with MAX_USERS env var
+
     # Platform gateway
     host: str = "0.0.0.0"
     port: int = 8080

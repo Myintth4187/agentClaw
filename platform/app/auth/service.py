@@ -74,9 +74,13 @@ async def get_user_by_id(db: AsyncSession, user_id: str) -> User | None:
 
 
 async def create_user(db: AsyncSession, username: str, email: str, password: str) -> User:
-    # First registered user becomes admin by default
+    # Check user limit (demo mode: max 3 users)
     result = await db.execute(select(func.count()).select_from(User))
     user_count = result.scalar_one() or 0
+    if user_count >= settings.max_users:
+        raise ValueError(f"User limit reached ({settings.max_users}). Cannot create more users.")
+    
+    # First registered user becomes admin by default
     user = User(
         username=username,
         email=email,
