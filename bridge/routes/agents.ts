@@ -189,7 +189,6 @@ export function agentsRoutes(client: BridgeGatewayClient, config: BridgeConfig):
     const { name, workspace, emoji, avatar, installed_skills, model, agentId } = req.body;
 
     // If agentId is provided, use it as the agent id (for user-agent mapping)
-    const actualName = name || agentId;
     const actualAgentId = agentId || name;
 
     try {
@@ -198,7 +197,8 @@ export function agentsRoutes(client: BridgeGatewayClient, config: BridgeConfig):
       const resolvedWorkspace = actualWorkspace.startsWith("~")
         ? actualWorkspace.replace("~", os.homedir())
         : actualWorkspace;
-      const params: Record<string, unknown> = { id: actualAgentId, name: actualName, workspace: actualWorkspace };
+      // OpenClaw expects `name` as the agent id; `id` is not a valid create param.
+      const params: Record<string, unknown> = { name: actualAgentId, workspace: actualWorkspace };
       if (emoji !== undefined) params.emoji = emoji;
       if (avatar !== undefined) params.avatar = avatar;
       if (model !== undefined) params.model = model;

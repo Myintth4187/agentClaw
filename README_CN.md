@@ -250,7 +250,6 @@ MIT
 ## 致谢
 
 本项目灵感与来源：
-- OpenClaw (https://github.com/opendilab/openclaw) - Copyright (c) OpenDILab
-- nanobot (https://github.com/HKUDS/nanobot) - Copyright (c) HKUDS
-- MultiUserClaw (https://github.com/johnson7788/MultiUserClaw) - Copyright (c) johnson7788
-
+- OpenClaw - Copyright (c) OpenDILab
+- nanobot - Copyright (c) HKUDS
+- MultiUserClaw - Copyright (c) johnson7788
