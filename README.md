@@ -236,9 +236,6 @@ This architecture can be adapted to other agent engines for internal agent platf
 
 - WeChat: `wdyt1008521`
 - Email: `wuding129@163.com`
-- WeChat Group QR:
-
-![WeChat Group QR](docs/assets/wechat_group.jpg)
 
 ## License
 

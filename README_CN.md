@@ -239,9 +239,6 @@ AgentClaw 的架构实现：
 
 - 微信号：`wdyt1008521`
 - 邮箱：`wuding129@163.com`
-- 微信群二维码：
-
-![微信群二维码](docs/assets/wechat_group.jpg)
 
 ## License
 
